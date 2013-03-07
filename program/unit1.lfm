@@ -1,0 +1,165 @@
+object Form1: TForm1
+  Left = 283
+  Height = 502
+  Top = 222
+  Width = 531
+  Caption = 'XML Viewer'
+  ClientHeight = 502
+  ClientWidth = 531
+  OnCreate = FormCreate
+  Position = poDesktopCenter
+  SessionProperties = 'FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width'
+  LCLVersion = '1.1'
+  object FileNameEdit1: TFileNameEdit
+    Left = 8
+    Height = 25
+    Top = 24
+    Width = 489
+    DialogOptions = []
+    FilterIndex = 0
+    HideDirectories = False
+    ButtonWidth = 23
+    NumGlyphs = 1
+    Anchors = [akTop, akLeft, akRight]
+    MaxLength = 0
+    TabOrder = 0
+    OnChange = FileNameEdit1Change
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 15
+    Top = 8
+    Width = 166
+    Caption = 'Plik XML/CSV do wczytania:'
+    ParentColor = False
+  end
+  object sg: TStringGrid
+    Left = 8
+    Height = 374
+    Top = 80
+    Width = 513
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Columns = <    
+      item
+        Title.Caption = 'Poziom'
+        Width = 40
+      end    
+      item
+        Title.Caption = 'Adres'
+        Width = 100
+      end    
+      item
+        Title.Caption = 'Klucz'
+        Width = 80
+      end    
+      item
+        Title.Caption = 'Zmienna'
+        Width = 70
+      end    
+      item
+        Title.Caption = 'Wartość'
+        Width = 200
+      end>
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goSmoothScroll]
+    RowCount = 1
+    TabOrder = 1
+    Cells = (
+      1
+      0
+      0
+      'Poziom'
+    )
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 15
+    Top = 64
+    Width = 41
+    Caption = 'Wynik:'
+    ParentColor = False
+  end
+  object BitBtn1: TBitBtn
+    Left = 446
+    Height = 30
+    Top = 462
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = 'Wyjście'
+    OnClick = BitBtn1Click
+    TabOrder = 2
+  end
+  object not_filter: TCheckBox
+    Left = 331
+    Height = 22
+    Top = 5
+    Width = 190
+    Anchors = [akTop, akRight]
+    Caption = 'Nie filtruj MSSQL TraceData!'
+    Enabled = False
+    OnChange = FileNameEdit1Change
+    TabOrder = 3
+  end
+  object Edit1: TEdit
+    Left = 8
+    Height = 24
+    Top = 466
+    Width = 402
+    Alignment = taCenter
+    Anchors = [akLeft, akBottom]
+    Font.CharSet = EASTEUROPE_CHARSET
+    Font.Color = clBlack
+    Font.Height = -12
+    Font.Name = 'Arial'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    Font.Style = [fsItalic]
+    ParentFont = False
+    ReadOnly = True
+    TabOrder = 4
+    Text = '$Path($make())\local_precompile.exe "$(ConfDir)" "$(ProjPath)"'
+  end
+  object cc: TProgressBar
+    Left = 8
+    Height = 12
+    Top = 48
+    Width = 489
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 5
+  end
+  object xml: TXmlParser
+    OnRead = xmlRead
+    OnProgress = xmlProgress
+    left = 32
+    top = 384
+  end
+  object XMLPropStorage1: TXMLPropStorage
+    StoredValues = <>
+    FileName = 'local_xml_viewer.xml'
+    RootNodePath = 'root'
+    left = 104
+    top = 384
+  end
+  object csv: TCsvParser
+    Separator = ';'
+    OnRead = csvRead
+    OnProgress = xmlProgress
+    left = 32
+    top = 312
+  end
+  object sparser: TSymfoniaParser
+    OnRead = sparserRead
+    OnProgress = xmlProgress
+    left = 32
+    top = 240
+  end
+  object message: TExtMessage
+    Caption = '<Auto>'
+    HelpContext = 0
+    Position = psMainFormCenter
+    PosTop = 0
+    PosLeft = 0
+    left = 104
+    top = 240
+  end
+end

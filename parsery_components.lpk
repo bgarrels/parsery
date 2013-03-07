@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="Parsery_components"/>
+    <AddToProjectUsesSection Value="True"/>
+    <Author Value="Jacek Leszczyński"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="/home/tao/lazarus/components/xml_parser"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerPath Value="$(CompPath)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Komponent do parsowania wszelakich plików XML-owych"/>
+    <License Value="Białystok 2011 © Jacek Leszczyński
+                         &amp;
+Białystok 2011 © Elmark Marek Łotko
+"/>
+    <Version Major="1"/>
+    <Files Count="3">
+      <Item1>
+        <Filename Value="xmlparser.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="XmlParser"/>
+      </Item1>
+      <Item2>
+        <Filename Value="csvparser.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="CsvParser"/>
+      </Item2>
+      <Item3>
+        <Filename Value="symfoniaparser.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="SymfoniaParser"/>
+      </Item3>
+    </Files>
+    <Type Value="RunAndDesignTime"/>
+    <RequiredPkgs Count="3">
+      <Item1>
+        <PackageName Value="dcpcrypt"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+        <MinVersion Major="1" Valid="True"/>
+      </Item3>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <DestinationDirectory Value="C:/aaaa/SOURCE PROGRAM/komponenty"/>
+      <IgnoreBinaries Value="False"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

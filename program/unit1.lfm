@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 283
+  Left = 355
   Height = 502
-  Top = 222
+  Top = 233
   Width = 531
   Caption = 'XML Viewer'
   ClientHeight = 502
@@ -12,7 +12,7 @@ object Form1: TForm1
   LCLVersion = '1.1'
   object FileNameEdit1: TFileNameEdit
     Left = 8
-    Height = 25
+    Height = 22
     Top = 24
     Width = 489
     DialogOptions = []
@@ -27,9 +27,9 @@ object Form1: TForm1
   end
   object Label1: TLabel
     Left = 8
-    Height = 15
+    Height = 14
     Top = 8
-    Width = 166
+    Width = 163
     Caption = 'Plik XML/CSV do wczytania:'
     ParentColor = False
   end
@@ -73,9 +73,9 @@ object Form1: TForm1
   end
   object Label2: TLabel
     Left = 8
-    Height = 15
+    Height = 14
     Top = 64
-    Width = 41
+    Width = 39
     Caption = 'Wynik:'
     ParentColor = False
   end
@@ -90,10 +90,10 @@ object Form1: TForm1
     TabOrder = 2
   end
   object not_filter: TCheckBox
-    Left = 331
-    Height = 22
+    Left = 326
+    Height = 21
     Top = 5
-    Width = 190
+    Width = 195
     Anchors = [akTop, akRight]
     Caption = 'Nie filtruj MSSQL TraceData!'
     Enabled = False
@@ -102,8 +102,8 @@ object Form1: TForm1
   end
   object Edit1: TEdit
     Left = 8
-    Height = 24
-    Top = 466
+    Height = 22
+    Top = 468
     Width = 402
     Alignment = taCenter
     Anchors = [akLeft, akBottom]

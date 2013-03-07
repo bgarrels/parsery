@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, Unit1, parsery_components, progresscolor;
+  Forms, Unit1, ExtC, parsery_components, progresscolor;
 
 {$R *.res}
 

@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, EditBtn,
   StdCtrls, Grids, Buttons, XMLPropStorage, ComCtrls, XmlParser, CsvParser,
-  SymfoniaParser, ColorProgress, ExtMessage;
+  SymfoniaParser, ExtMessage;
 
 type
 
@@ -15,6 +15,7 @@ type
 
   TForm1 = class(TForm)
     BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
     csv: TCsvParser;
     Edit1: TEdit;
     message: TExtMessage;
@@ -25,13 +26,16 @@ type
     cc: TProgressBar;
     sg: TStringGrid;
     sparser: TSymfoniaParser;
+    StatusBar1: TStatusBar;
     xml: TXmlParser;
     XMLPropStorage1: TXMLPropStorage;
     procedure BitBtn1Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
     procedure csvRead(Sender: TObject; NumberRec,PosRec: integer; sName,
       sValue: string; var Stopped: boolean);
     procedure FileNameEdit1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure sparserRead(Sender: TObject; poziom: integer; adres, klucz,
       zmienna, wartosc: string; var Stopped: boolean);
     procedure xmlProgress(Sender: TObject; vMax, vPos: integer);
@@ -40,18 +44,92 @@ type
   private
     MSSQL1,MSSQL2: integer;
     CZYTAJ: boolean;
+    list: TStringList;
     { private declarations }
   public
     { public declarations }
   end; 
 
+  { TRun }
+
+  TRun = class(TThread)
+  private
+    { private declarations }
+    str: TStringList;
+    s: string;
+  protected
+    procedure Execute; override;
+    procedure GetL1;
+    procedure GetL2;
+    procedure GetL3;
+  public
+    Constructor Create;
+  end;
+
+const
+  spij = 10;
+
 var
-  Form1: TForm1; 
+  Form1: TForm1;
+  tab: TRun;
 
 implementation
 
 uses
-  ExtC;
+  tools;
+
+{ TRun }
+
+procedure TRun.Execute;
+var
+  i: integer;
+begin
+  try
+    str:=TStringList.Create;
+    Synchronize(@GetL1);
+    for i:=1 to str.Count do
+    begin
+      s:=str[i-1];
+      Synchronize(@GetL2);
+      if Terminated then break;
+    end;
+    Synchronize(@GetL3);
+  finally
+    str.Free;
+  end;
+end;
+
+procedure TRun.GetL1;
+begin
+  Form1.StatusBar1.SimpleText:='Displaying Data 2/2... (please wait or plug in button STOP or EXIT)';
+  Form1.BitBtn2.Enabled:=true;
+  str.Assign(Form1.list);
+  Form1.cc.Max:=str.Count;
+  Form1.cc.Position:=0;
+end;
+
+procedure TRun.GetL2;
+begin
+  Form1.sg.InsertColRow(False,Form1.sg.RowCount);
+  Form1.sg.Rows[Form1.sg.RowCount-1].Text:=s;
+  Form1.cc.StepBy(1);
+end;
+
+procedure TRun.GetL3;
+begin
+  Form1.StatusBar1.SimpleText:='';
+  Form1.list.Clear;
+  Form1.FileNameEdit1.Enabled:=true;
+  Form1.BitBtn2.Enabled:=false;
+  Form1.cc.Position:=0;
+end;
+
+constructor TRun.Create;
+begin
+  FreeOnTerminate:=true;
+  inherited Create(true);
+  resume;
+end;
 
 {$R *.lfm}
 
@@ -59,7 +137,14 @@ uses
 
 procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
+  if BitBtn2.Enabled then tab.Terminate;
   Close;
+end;
+
+procedure TForm1.BitBtn2Click(Sender: TObject);
+begin
+  BitBtn2.Enabled:=false;
+  tab.Terminate;
 end;
 
 procedure TForm1.csvRead(Sender: TObject; NumberRec,PosRec: integer; sName,
@@ -69,15 +154,17 @@ var
 begin
   s:=sName;
   if s='' then s:=' ';
-  //wczytuję rekord
-  sg.InsertColRow(False,sg.RowCount);
-  sg.Rows[sg.RowCount-1].Text:=IntToStr(NumberRec)+#13#10+IntToStr(PosRec)+#13#10+' '+#13#10+s+#13#10+sValue;
+  list.Add(IntToStr(NumberRec)+#13#10+IntToStr(PosRec)+#13#10+' '+#13#10+s+#13#10+sValue);
 end;
 
 procedure TForm1.FileNameEdit1Change(Sender: TObject);
 var
   plik,ext: string;
+  i,j: integer;
 begin
+  FileNameEdit1.InitialDir:=ExtractFilePath(FileNameEdit1.FileName);
+  FileNameEdit1.Enabled:=false;
+  StatusBar1.SimpleText:='Reading XML 1/2...';
   Application.ProcessMessages;
   MSSQL1:=0;
   MSSQL2:=0;
@@ -108,10 +195,10 @@ begin
     begin
       sparser.Filename:=plik;
       sparser.Execute;
-      cc.Position:=0;
     end;
-    cc.Position:=0;
   end;
+  //odpalenie wątku
+  tab:=TRun.Create;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
@@ -122,6 +209,12 @@ begin
   s:=ParamStr(1);
   //message.ShowMessage(s);
   FileNameEdit1.InitialDir:=s;
+  List:=TStringList.Create;
+end;
+
+procedure TForm1.FormDestroy(Sender: TObject);
+begin
+  list.Free;
 end;
 
 procedure TForm1.sparserRead(Sender: TObject; poziom: integer; adres, klucz,
@@ -131,16 +224,15 @@ var
 begin
   s:=zmienna;
   if s='' then s:=' ';
-  //wczytuję rekord
   CZYTAJ:=false;
-  sg.InsertColRow(False,sg.RowCount);
-  sg.Rows[sg.RowCount-1].Text:=IntToStr(poziom)+#13#10+adres+#13#10+klucz+#13#10+s+#13#10+wartosc;
+  list.Add(IntToStr(poziom)+#13#10+adres+#13#10+klucz+#13#10+s+#13#10+wartosc);
 end;
 
 procedure TForm1.xmlProgress(Sender: TObject; vMax, vPos: integer);
 begin
   cc.Max:=vMax;
   cc.Position:=vPos;
+  cc.Refresh;
 end;
 
 procedure TForm1.xmlRead(Sender: TObject; poziom: integer; adres, klucz,
@@ -167,8 +259,7 @@ begin
   begin
     //wczytuję rekord
     CZYTAJ:=false;
-    sg.InsertColRow(False,sg.RowCount);
-    sg.Rows[sg.RowCount-1].Text:=IntToStr(poziom)+#13#10+adres+#13#10+klucz+#13#10+s+#13#10+wartosc;
+    list.Add(IntToStr(poziom)+#13#10+adres+#13#10+klucz+#13#10+s+#13#10+wartosc);
   end;
   if (MSSQL1=10) and (not CZYTAJ) and (not not_filter.Checked) then
   begin

@@ -1,12 +1,13 @@
 object Form1: TForm1
   Left = 355
-  Height = 502
+  Height = 510
   Top = 233
-  Width = 531
+  Width = 635
   Caption = 'XML Viewer'
-  ClientHeight = 502
-  ClientWidth = 531
+  ClientHeight = 510
+  ClientWidth = 635
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   Position = poDesktopCenter
   SessionProperties = 'FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width'
   LCLVersion = '1.1'
@@ -14,7 +15,7 @@ object Form1: TForm1
     Left = 8
     Height = 22
     Top = 24
-    Width = 489
+    Width = 593
     DialogOptions = []
     FilterIndex = 0
     HideDirectories = False
@@ -26,18 +27,22 @@ object Form1: TForm1
     OnChange = FileNameEdit1Change
   end
   object Label1: TLabel
+    AnchorSideLeft.Control = FileNameEdit1
+    AnchorSideBottom.Control = FileNameEdit1
     Left = 8
     Height = 14
     Top = 8
     Width = 163
+    Anchors = [akLeft, akBottom]
+    BorderSpacing.Bottom = 2
     Caption = 'Plik XML/CSV do wczytania:'
     ParentColor = False
   end
   object sg: TStringGrid
     Left = 8
-    Height = 374
+    Height = 370
     Top = 80
-    Width = 513
+    Width = 617
     Anchors = [akTop, akLeft, akRight, akBottom]
     Columns = <    
       item
@@ -72,41 +77,57 @@ object Form1: TForm1
     )
   end
   object Label2: TLabel
+    AnchorSideLeft.Control = sg
+    AnchorSideTop.Control = sg
+    AnchorSideBottom.Control = sg
     Left = 8
     Height = 14
-    Top = 64
+    Top = 66
     Width = 39
+    Anchors = [akLeft, akBottom]
     Caption = 'Wynik:'
     ParentColor = False
   end
   object BitBtn1: TBitBtn
-    Left = 446
+    AnchorSideTop.Control = sg
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = sg
+    AnchorSideRight.Side = asrBottom
+    Left = 550
     Height = 30
-    Top = 462
+    Top = 456
     Width = 75
-    Anchors = [akRight, akBottom]
+    Anchors = [akTop, akRight]
+    BorderSpacing.Top = 6
     Caption = 'Wyjście'
     OnClick = BitBtn1Click
     TabOrder = 2
   end
   object not_filter: TCheckBox
-    Left = 326
+    AnchorSideTop.Control = FileNameEdit1
+    AnchorSideRight.Control = FileNameEdit1
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = FileNameEdit1
+    Left = 406
     Height = 21
-    Top = 5
+    Top = 3
     Width = 195
-    Anchors = [akTop, akRight]
+    Anchors = [akRight, akBottom]
     Caption = 'Nie filtruj MSSQL TraceData!'
     Enabled = False
     OnChange = FileNameEdit1Change
     TabOrder = 3
   end
   object Edit1: TEdit
+    AnchorSideLeft.Control = sg
+    AnchorSideTop.Control = BitBtn2
+    AnchorSideTop.Side = asrCenter
+    AnchorSideBottom.Control = sg
     Left = 8
     Height = 22
-    Top = 468
+    Top = 460
     Width = 402
     Alignment = taCenter
-    Anchors = [akLeft, akBottom]
     Font.CharSet = EASTEUROPE_CHARSET
     Font.Color = clBlack
     Font.Height = -12
@@ -120,12 +141,39 @@ object Form1: TForm1
     Text = '$Path($make())\local_precompile.exe "$(ConfDir)" "$(ProjPath)"'
   end
   object cc: TProgressBar
+    AnchorSideLeft.Control = FileNameEdit1
+    AnchorSideTop.Control = FileNameEdit1
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = FileNameEdit1
+    AnchorSideRight.Side = asrBottom
     Left = 8
-    Height = 12
-    Top = 48
-    Width = 489
+    Height = 10
+    Top = 46
+    Width = 593
     Anchors = [akTop, akLeft, akRight]
+    Smooth = True
     TabOrder = 5
+  end
+  object BitBtn2: TBitBtn
+    AnchorSideTop.Control = BitBtn1
+    AnchorSideRight.Control = BitBtn1
+    Left = 464
+    Height = 30
+    Top = 456
+    Width = 80
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 6
+    Caption = 'Stop'
+    Enabled = False
+    OnClick = BitBtn2Click
+    TabOrder = 6
+  end
+  object StatusBar1: TStatusBar
+    Left = 0
+    Height = 18
+    Top = 492
+    Width = 635
+    Panels = <>
   end
   object xml: TXmlParser
     OnRead = xmlRead
@@ -134,7 +182,11 @@ object Form1: TForm1
     top = 384
   end
   object XMLPropStorage1: TXMLPropStorage
-    StoredValues = <>
+    StoredValues = <    
+      item
+        Name = 'sciezka'
+        KeyString = 'sciezka'
+      end>
     FileName = 'local_xml_viewer.xml'
     RootNodePath = 'root'
     left = 104

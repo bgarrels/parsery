@@ -60,9 +60,9 @@
         <UnitName Value="Unit1"/>
       </Unit1>
       <Unit2>
-        <Filename Value="ExtC.pas"/>
+        <Filename Value="tools.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="ExtC"/>
+        <UnitName Value="tools"/>
       </Unit2>
     </Units>
   </ProjectOptions>
@@ -74,7 +74,6 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\..\Lib"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -91,4 +90,11 @@
       <CompilerPath Value="$(CompPath)"/>
     </Other>
   </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="1">
+      <Item1>
+        <Name Value="EThread"/>
+      </Item1>
+    </Exceptions>
+  </Debugging>
 </CONFIG>

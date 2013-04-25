@@ -16,10 +16,6 @@ unit CsvParser;
 {$mode objfpc}{$H+}
 {$ENDIF}
 
-{$IFDEF LAZARUS}
-{$mode objfpc}{$H+}
-{$ENDIF}
-
 interface
 
 {$IFDEF DELPHI}

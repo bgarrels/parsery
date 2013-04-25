@@ -6,3 +6,4 @@ xml_viewer
 *.exe
 *.~*
 *.dcu
+*.dbg

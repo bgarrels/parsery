@@ -1,11 +1,29 @@
 unit SymfoniaParser;
 
+{$IFDEF MSWINDOWS}
+  {$DEFINE WINDOWS}
+{$ENDIF}
+
+{$IFNDEF FPC AND $IFDEF MSWINDOWS}
+  {$DEFINE DELPHI}
+{$ENDIF}
+
+{$IFDEF FPC}
+  {$DEFINE LAZARUS}
+{$ENDIF}
+
+{$IFDEF LAZARUS}
 {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs;
+  Classes, SysUtils,
+  {$IFDEF LAZARUS}
+  LResources,
+  {$ENDIF}
+  Forms, Controls, Graphics, Dialogs;
 
 type
   TBeforeAfterReadEvent = procedure(Sender: TObject) of object;
@@ -47,8 +65,10 @@ procedure Register;
 
 implementation
 
+{$IFDEF LAZARUS}
 uses
   lconvencoding;
+{$ENDIF}
 
 var
   zm_stop: boolean;
@@ -56,13 +76,19 @@ var
 
 procedure Register;
 begin
+  {$IFDEF LAZARUS}
   {$I symfoniaparser_icon.lrs}
+  {$ENDIF}
   RegisterComponents('Misc',[TSymfoniaParser]);
 end;
 
 function ConvertISO(s: string): string;
 begin
+  {$IFDEF LAZARUS}
   result:=CP1250ToUTF8(s);
+  {$ELSE}
+  result:=s;
+  {$ENDIF}
 end;
 
 function GetLineToStr(s:string;l:integer;separator:char):string;

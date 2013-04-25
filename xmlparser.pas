@@ -1,30 +1,53 @@
 unit XmlParser;
 
 {
-  Komponent przelatuje cały plik XML i wyrzuca dane w odpowiedniej formie
-  do przeczytania ze zdarzenia. Ewentualne błędy są wyrzucane w drugim zdarzeniu.
+  Komponent przelatuje caly plik XML i wyrzuca dane w odpowiedniej formie
+  do przeczytania ze zdarzenia. Ewentualne bledy sa� wyrzucane w drugim zdarzeniu.
 
-  Autor: Jacek Leszczyński
+  Autor: Jacek Leszczynski
   E-Mail: tao@bialan.pl
 
-  Wszelkie prawa zastrzeżone (C) Białystok 2011, Polska.
+  Wszelkie prawa zastrzezone (C) Bialystok 2011, Polska.
 
 
-  Instrukcja obsługi:
-  1. Ustawiamy właściwość FILENAME, ma wskazywać na plik XML do wczytania.
-  2. Wypełniamy zdarzenie ONREAD odpowiednia wartością.
-  3. Wypełniamy zdarzenie ONERROR odpowiednią wartością (zalecane).
-  4. Uruchamiamy funckję EXECUTE, która zwróci TRUE jeśli się wykona, gdy wyjdą
-     jakieś błędy, zostanie zwrócona wartość FALSE!
+  Instrukcja obslugi:
+  1. Ustawiamy wlasciwosci FILENAME, ma wskazywac na plik XML do wczytania.
+  2. Wypelniamy zdarzenie ONREAD odpowiednia wartoscia.
+  3. Wypelniamy zdarzenie ONERROR odpowiednia wartoscia� (zalecane).
+  4. Uruchamiamy funckje EXECUTE, ktora zwroci TRUE jesli sie wykona, gdy wyjda
+     jakies bledy, zostanie zwrocona wartosc FALSE!
 }
 
+{$IFDEF MSWINDOWS}
+  {$DEFINE WINDOWS}
+{$ENDIF}
+
+{$IFNDEF FPC AND $IFDEF MSWINDOWS}
+  {$DEFINE DELPHI}
+{$ENDIF}
+
+{$IFDEF FPC}
+  {$DEFINE LAZARUS}
+{$ENDIF}
+
+{$IFDEF LAZARUS}
 {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 
 uses
-  Classes, SysUtils, LResources, Forms, Controls, Graphics, Dialogs,
-  DOM, XMLRead, DCPdes, DCPsha1;
+  Classes, SysUtils,
+  {$IFDEF LAZARUS}
+  LResources,
+  {$ENDIF}
+  Forms, Controls, Graphics, Dialogs,
+  {$IFDEF LAZARUS}
+  DOM, XMLRead,
+  {$ELSE}
+  XmlDOM, XmlIntf, XmlDoc,
+  {$ENDIF}
+  DCPdes, DCPsha1;
 
 type
   { zdarzenia }
@@ -44,7 +67,7 @@ type
     { Private declarations }
     strumien,strumien2,strumien3: TMemoryStream;
     doc: TXMLDocument;
-    temp: TDOMNode;
+    temp: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF} ;
     __ERROR: integer;
     zm_filename: string;
     FES: TEncodingFormat;
@@ -61,7 +84,7 @@ type
     function DecryptStream(s_in,s_out:TStream;size:longword):longword;
   protected
     { Protected declarations }
-    procedure ParseXML(level: integer; node: TDOMNode);
+    procedure ParseXML(level: integer; node: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF});
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
@@ -69,10 +92,10 @@ type
     function Execute: boolean;
     function LockString(s:string;spaces:boolean=false):string;
     function UnlockString(s:string;spaces:boolean=false):string;
-    function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean;
-    function EncodeXML:boolean;
-    function DecodeXML(DecodeFile:string;XMLFile:string=''):boolean;
-    function DecodeXML:boolean;
+    function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
+    function EncodeXML:boolean; {$IFDEF DELPHI}overload;{$ENDIF}
+    function DecodeXML(DecodeFile:string;XMLFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
+    function DecodeXML:boolean; {$IFDEF DELPHI}overload;{$ENDIF}
   published
     { Published declarations }
     property Encoding: TEncodingFormat read FES write FES default eAuto;
@@ -92,7 +115,11 @@ procedure Register;
 implementation
 
 uses
+  {$IFDEF LAZARUS}
   lconvencoding;
+  {$ELSE}
+  windows;
+  {$ENDIF}
 
 type
   _import = record
@@ -108,13 +135,15 @@ var
 
 procedure Register;
 begin
+  {$IFDEF LAZARUS}
   {$I xmlparser_icon.lrs}
+  {$ENDIF}
   RegisterComponents('Misc',[TXmlParser]);
 end;
 
 { TXmlParser }
 
-//Funkcja zwraca n-ty (l) ciąg stringu (s), o wskazanym separatorze.
+//Funkcja zwraca n-ty (l) ciag stringu (s), o wskazanym separatorze.
 function GetLineToStr(s:string;l:integer;separator:char):string;
 var
   i,ll,dl: integer;
@@ -138,7 +167,11 @@ function ConvOdczyt(s: string): string;
 var
   pom: string;
 begin
+  {$IFDEF LAZARUS}
   pom:=ConvertEncoding(s,'cp1250','utf8');
+  {$ELSE}
+  pom:=UTF8Encode(s);
+  {$ENDIF}
   result:=pom;
 end;
 
@@ -146,7 +179,11 @@ function ConvZapis(s: string): string;
 var
   pom: string;
 begin
+  {$IFDEF LAZARUS}
   pom:=ConvertEncoding(s,'utf8','cp1250');
+  {$ELSE}
+  pom:=UTF8Decode(s);
+  {$ENDIF}
   result:=pom;
 end;
 
@@ -157,7 +194,7 @@ var
 begin
   if klucz='#text' then exit;
 
-  //gdy początek
+  //gdy poczatek
   if level=-1 then
   begin
     import.adres:='/'+klucz;
@@ -166,10 +203,10 @@ begin
     exit;
   end;
 
-  //czy mamy coś do dodania?
+  //czy mamy cos do dodania?
   if import.level<level then import.adres:=import.adres+'/'+klucz;
 
-  //czy mamy coś do usunięcia?
+  //czy mamy cos do usuniecia?
   if (import.level>level) or ((import.level=level) and (GetLineToStr(import.adres,level,'/')<>klucz)) then
   begin
     if klucz='' then b:=2 else b:=1;
@@ -185,7 +222,7 @@ end;
 
 function CzyToJestXML(s:shortstring):boolean;
 begin
-  //sprawdzam ciąg i porównuję go do: "<?xml"
+  //sprawdzam ciag i porownuje go do: "<?xml"
   result:=(s[1]='<') and (s[2]='?') and
           ((s[3]='X') or (s[3]='x')) and
           ((s[4]='M') or (s[4]='m')) and
@@ -201,10 +238,14 @@ var
   a: integer;
   b: boolean;
 begin
-  (* Najpierw sprawdzę, czy plik nie jest zakodowany *)
+  (* Najpierw sprawdze, czy plik nie jest zakodowany *)
   assignfile(e,filename);
+  {$IFDEF LAZARUS}
   reset(e,1);
-  //czytam pierwsze 5 znaków
+  {$ELSE}
+  reset(e);
+  {$ENDIF}
+  //czytam pierwsze 5 znakow
   s:='';
   for a:=1 to 5 do
   begin
@@ -214,7 +255,7 @@ begin
   closefile(e);
   //sprawdze jeszcze tylko, czy to jest XML
   b:=CzyToJestXML(s);
-  //jeśli to jest plik zakodowany to wychodzę
+  //jesli to jest plik zakodowany to wychodze
   if not b then
   begin
     result:=3;
@@ -252,9 +293,10 @@ begin
   Des.Burn;
 end;
 
-procedure TXmlParser.ParseXML(level: integer; node: TDOMNode);
+
+procedure TXmlParser.ParseXML(level: integer; node: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF} );
 var
-  cNode: TDOMNode;
+  cNode: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF};
   i: integer;
 begin
   if zm_stop or (Node=nil) then Exit;
@@ -263,14 +305,24 @@ begin
   if Assigned(FOnRead) then
   begin
     //ATRYBUTY
-    if Node.HasAttributes and (Node.Attributes.Length>0) then
+    try
+    if {$IFDEF LAZARUS} Node.HasAttributes and {$ENDIF} (Node.Attributes.Length>0) then
     begin
       for i:=0 to Node.Attributes.Length-1 do
+        {$IFDEF LAZARUS}
         FOnRead(self,level,import.adres,Node.NodeName,Node.Attributes[i].NodeName,UTF8Encode(Node.Attributes[i].NodeValue),zm_stop);
+        {$ELSE}
+        FOnRead(self,level,import.adres,Node.NodeName,Node.Attributes[i].NodeName,Node.Attributes[i].NodeValue,zm_stop);
+        {$ENDIF}
     end;
+    except end;
     //WARTOSCI KLUCZY
     if Node.NodeValue<>'' then
+      {$IFDEF LAZARUS}
       FOnRead(self,import.level,import.adres,import.klucz,'',UTF8Encode(Node.NodeValue),zm_stop);
+      {$ELSE}
+      FOnRead(self,import.level,import.adres,import.klucz,'',Node.NodeValue,zm_stop);
+      {$ENDIF}
   end;
 
   if Assigned(FOnProgress) then case istrumien of
@@ -334,7 +386,7 @@ begin
     import.level:=-1;
     strumien.Clear;
     strumien.LoadFromFile(plik);
-    //przekodowanie - jeśli trzeba
+    //przekodowanie - jesli trzeba
     if (FES=eWindows1250) or ((FES=eAuto) and (kodowanie=2)) then
     begin
       strumien2.Clear;
@@ -343,7 +395,11 @@ begin
       begin
         buf:=strumien.Read(bufor[1],200);
         SetLength(bufor,buf);
+        {$IFDEF LAZARUS}
         bufor:=ConvertEncoding(bufor,'cp1250','utf8');
+        {$ELSE}
+        bufor:=UTF8Encode(bufor);
+        {$ENDIF}
         buf:=length(bufor);
         if (a=0) and (pos('<?',bufor)>0) or (a=1) then
         begin
@@ -365,7 +421,7 @@ begin
       strumien2.Position:=0;
       b_przekodowanie:=true;
     end;
-    //DESToXML - jeśli trzeba
+    //DESToXML - jesli trzeba
     if (FES=eDES) or ((FES=eAuto) and (kodowanie=3)) then
     begin
       strumien2.Clear;
@@ -373,7 +429,7 @@ begin
       strumien2.Position:=0;
       b_przekodowanie:=true;
     end;
-    //ewentualny test poprawności pliku XML
+    //ewentualny test poprawnosci pliku XML
     if FTest then
     begin
       if b_przekodowanie then
@@ -388,7 +444,7 @@ begin
       end;
       if not CzyToJestXML(bufor) then
       begin
-        (* rejestruje błąd i przerywam zadanie *)
+        (* rejestruje blad i przerywam zadanie *)
         __ERROR:=4;
         if Assigned(FOnError) then FOnError(Self, 4, 'To nie jest plik XML! Parsowanie przerwane.');
         result:=false;
@@ -396,18 +452,34 @@ begin
       end;
     end;
     //parser
+    {$IFDEF LAZARUS}
     doc:=TXMLDocument.Create;
+    {$ELSE}
+    doc:=TXMLDocument.Create(nil);
+    {$ENDIF}
     if b_przekodowanie then
     begin
       istrumien:=2;
       if Assigned(FOnProgress) then FOnProgress(Self,strumien2.Size,0);
-      ReadXMLFile(doc,strumien2); (* strumień przekodowany, lub zdeszyfrowany *)
+      {$IFDEF LAZARUS}
+      ReadXMLFile(doc,strumien2); (* strumien przekodowany, lub zdeszyfrowany *)
+      {$ELSE}
+      doc.LoadFromStream(strumien2,xetUTF_8); (* strumien przekodowany, lub zdeszyfrowany *)
+      {$ENDIF}
     end else begin
       istrumien:=0;
       if Assigned(FOnProgress) then FOnProgress(Self,strumien.Size,0);
-      ReadXMLFile(doc,strumien); (* strumień domyślny *)
+      {$IFDEF LAZARUS}
+      ReadXMLFile(doc,strumien); (* strumien domyslny *)
+      {$ELSE}
+      doc.LoadFromStream(strumien,xetUTF_8); (* strumien domyslny *)
+      {$ENDIF}
     end;
+    {$IFDEF LAZARUS}
     temp:=doc.DocumentElement;
+    {$ELSE}
+    temp:=doc.DOMDocument;
+    {$ENDIF}
     ParseXML(0,temp);
     if (not zm_stop) and FNULL and Assigned(FOnRead) then FOnRead(self,-1,'','','','',zm_stop);
   finally
@@ -417,7 +489,12 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
-    if Assigned(FOnError) then FOnError(Self, 2, 'Wystąpił nieprzewidziany przez autora błąd!'+#13+'Parsowane pliku może być niepełne.');
+    if Assigned(FOnError) then
+      {$IFDEF LAZARUS}
+      FOnError(Self, 2, 'Wystąpił nieprzewidziany przez autora błąd!'+#13+'Parsowane pliku może być niepełne.');
+      {$ELSE}
+      FOnError(Self, 2, 'Wyst�pi�� nieprzewidziany przez autora b��d!'+#13+'Parsowane pliku mo�e by� niepe�ne.');
+      {$ENDIF}
     zm_result:=false;
   end;
   if Assigned(FOnAfterRead) then FOnAfterRead(Self);
@@ -466,7 +543,7 @@ begin
     __ERROR:=0;
     strumien.Clear;
     strumien.LoadFromFile(plik);
-    //przekodowanie jeśli trzeba
+    //przekodowanie jesli trzeba
     if (FES=eWindows1250) or (((FES=eAuto) or (FES=eDES)) and (kodowanie=2)) then
     begin
       strumien2.Clear;
@@ -475,7 +552,11 @@ begin
       begin
         buf:=strumien.Read(bufor[1],200);
         SetLength(bufor,buf);
+        {$IFDEF LAZARUS}
         bufor:=ConvertEncoding(bufor,'cp1250','utf8');
+        {$ELSE}
+        bufor:=UTF8Encode(bufor);
+        {$ENDIF}
         buf:=length(bufor);
         if (a=0) and (pos('<?',bufor)>0) or (a=1) then
         begin
@@ -511,7 +592,11 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
+    {$IFDEF LAZARUS}
     if Assigned(FOnError) then FOnError(Self, 2, 'Wystąpił nieprzewidziany przez autora błąd!'+#13+'Przekodowany plik może być nieczytelny.');
+    {$ELSE}
+    if Assigned(FOnError) then FOnError(Self, 2, 'Wyst�pi�� nieprzewidziany przez autora b��d!'+#13+'Przekodowany plik mo�e by� nieczytelny.');
+    {$ENDIF}
     zm_result:=false;
   end;
   result:=zm_result;
@@ -553,7 +638,11 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
+    {$IFDEF LAZARUS}
     if Assigned(FOnError) then FOnError(Self, 2, 'Wystąpił nieprzewidziany przez autora błąd!'+#13+'Przekodowany plik może być nieczytelny.');
+    {$ELSE}
+    if Assigned(FOnError) then FOnError(Self, 2, 'Wyst�pi�� nieprzewidziany przez autora b��d!'+#13+'Przekodowany plik mo�e by� nieczytelny.');
+    {$ENDIF}
     zm_result:=false;
   end;
   result:=zm_result;

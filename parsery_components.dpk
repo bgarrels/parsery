@@ -27,9 +27,13 @@ package parsery_components;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  DCPdelphi6,
+  xmlrtl;
 
 contains
-  CsvParser in 'csvparser.pas';
+  CsvParser in 'csvparser.pas',
+  SymfoniaParser in 'symfoniaparser.pas',
+  XmlParser in 'xmlparser.pas';
 
 end.

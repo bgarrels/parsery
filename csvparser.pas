@@ -100,7 +100,7 @@ begin
   {$IFDEF LAZARUS}
   result:=CP1250ToUTF8(s);
   {$ELSE}
-  result:=s;
+  result:=UTF8Encode(s);
   {$ENDIF}
 end;
 
@@ -141,17 +141,17 @@ function GetLineCount(s: string; separator,textseparator: char): integer;
 var
   ll,i,ost: integer;
 begin
-  //liczę separatory by zdiagnozować maksymalną ilość sekcji
+  //licze separatory by zdiagnozowac maksymalna ilosc sekcji
   ll:=1;
   for i:=1 to length(s) do if s[i]=separator then inc(ll);
-  //szukam ostatniej nie białej zawartości sekcji
+  //szukam ostatniej nie bialej zawartosci sekcji
   ost:=0;
   for i:=ll downto 1 do if GetLineToStr(s,i,separator,textseparator)<>'' then
   begin
     ost:=i;
     break;
   end;
-  //wyjście
+  //wyjscie
   result:=ost;
 end;
 
@@ -169,7 +169,7 @@ begin
   except
     on e:exception do
     begin
-      if Assigned(FOnError) then FOnError(Self,1,ConvertISO(e.Message));
+      if Assigned(FOnError) then FOnError(Self,1,{$IFDEF LAZARUS}ConvertISO(e.Message){$ELSE}e.Message{$ENDIF});
       result:=-1;
       exit;
     end;
@@ -226,7 +226,7 @@ begin
   except
     on e:exception do
     begin
-      if Assigned(FOnError) then FOnError(Self,1,ConvertISO(e.Message));
+      if Assigned(FOnError) then {$IFDEF LAZARUS}FOnError(Self,1,ConvertISO(e.Message){$ELSE}FOnError(Self,1,e.Message{$ENDIF} );
       result:=false;
       exit;
     end;
@@ -238,13 +238,15 @@ begin
   begin
     try
       readln(f,s);
+      {$IFDEF LAZARUS}
       s:=ConvertISO(s);
+      {$ENDIF}
       inc(zm_count);
       if Assigned(FOnProgress) then FOnProgress(Self,_MAX,zm_count);
     except
       on e:exception do
       begin
-        if Assigned(FOnError) then FOnError(Self,1,ConvertISO(e.Message));
+        if Assigned(FOnError) then FOnError(Self,1,{$IFDEF LAZARUS}ConvertISO(e.Message){$ELSE}e.Message{$ENDIF});
         inc(licznik);
         inc(zm_count);
         if Assigned(FOnProgress) then FOnProgress(Self,_MAX,zm_count);

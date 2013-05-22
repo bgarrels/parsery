@@ -1,6 +1,8 @@
 unit komunikaty_lazarus;
 
+{$IFDEF LAZARUS}
 {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 

@@ -75,10 +75,12 @@ procedure Register;
 
 implementation
 
-{$IFDEF LAZARUS}
 uses
-  lconvencoding;
-{$ENDIF}
+  {$IFDEF LAZARUS}
+  lconvencoding, Komunikaty_Lazarus;
+  {$ELSE}
+  Komunikaty_Delphi;
+  {$ENDIF}
 
 var
   zm_stop: boolean;
@@ -270,4 +272,4 @@ begin
   result:=true;
 end;
 
-end.
+end.

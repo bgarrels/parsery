@@ -7,7 +7,7 @@
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
-        <OtherUnitFiles Value="/home/tao/lazarus/components/xml_parser"/>
+        <OtherUnitFiles Value="/home/tao/lazarus/components/xml_parser/"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Other>
@@ -20,7 +20,7 @@
 Białystok 2011 © Elmark Marek Łotko
 "/>
     <Version Major="1"/>
-    <Files Count="3">
+    <Files Count="4">
       <Item1>
         <Filename Value="xmlparser.pas"/>
         <HasRegisterProc Value="True"/>
@@ -36,6 +36,10 @@ Białystok 2011 © Elmark Marek Łotko
         <HasRegisterProc Value="True"/>
         <UnitName Value="SymfoniaParser"/>
       </Item3>
+      <Item4>
+        <Filename Value="komunikaty_lazarus.pas"/>
+        <UnitName Value="komunikaty_lazarus"/>
+      </Item4>
     </Files>
     <Type Value="RunAndDesignTime"/>
     <RequiredPkgs Count="3">
@@ -58,5 +62,8 @@ Białystok 2011 © Elmark Marek Łotko
       <DestinationDirectory Value="C:/aaaa/SOURCE PROGRAM/komponenty"/>
       <IgnoreBinaries Value="False"/>
     </PublishOptions>
+    <CustomOptions Items="ExternHelp" Version="2">
+      <_ExternHelp Items="Count"/>
+    </CustomOptions>
   </Package>
 </CONFIG>

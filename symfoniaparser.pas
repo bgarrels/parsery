@@ -65,10 +65,12 @@ procedure Register;
 
 implementation
 
-{$IFDEF LAZARUS}
 uses
-  lconvencoding;
-{$ENDIF}
+  {$IFDEF LAZARUS}
+  lconvencoding, Komunikaty_Lazarus;
+  {$ELSE}
+  Komunikaty_Delphi;
+  {$ENDIF}
 
 var
   zm_stop: boolean;
@@ -156,7 +158,7 @@ begin
   licznik:=0;
   adres:='';
   klucz:='';
-  (* pętla *)
+  (* petla *)
   while not eof(f) do
   begin
     try
@@ -173,7 +175,7 @@ begin
     end;
     if trim(s)='' then continue;
     s:=ConvertISO(s);
-    (* analizuję rekord *)
+    (* analizuje rekord *)
     if pos('{',s)>0 then
     begin
       //dodanie sekcji
@@ -185,7 +187,7 @@ begin
     end;
     if pos('}',s)>0 then
     begin
-      //usunięcie sekcji
+      //usuniecie sekcji
       for i:=length(adres) downto 1 do if adres[i]='/' then
       begin
         delete(adres,i,100);
@@ -196,7 +198,7 @@ begin
       dec(licznik);
       continue;
     end;
-    //właściwy kod
+    //wlasciwy kod
     s1:=trim(GetLineToStr(s,1,'='));
     s2:=trim(GetLineToStr(s,2,'='));
     if Assigned(FOnRead) then FOnRead(self,licznik,adres,klucz,s1,s2,zm_stop);
@@ -204,7 +206,7 @@ begin
   end;
   (* dodatkowe puste uruchomienie metody OnRead *)
   if (not zm_stop) and FNULL and Assigned(FOnRead) then FOnRead(self,-1,'','','','',zm_stop);
-  (* zamknięcie pliku *)
+  (* zamkniecie pliku *)
   closefile(f);
   if Assigned(FOnAfterRead) then FOnAfterRead(Self);
   result:=true;
@@ -237,4 +239,4 @@ begin
   result:=r;
 end;
 
-end.
+end.

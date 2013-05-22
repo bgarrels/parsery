@@ -2,7 +2,7 @@ unit XmlParser;
 
 {
   Komponent przelatuje caly plik XML i wyrzuca dane w odpowiedniej formie
-  do przeczytania ze zdarzenia. Ewentualne bledy sa… wyrzucane w drugim zdarzeniu.
+  do przeczytania ze zdarzenia. Ewentualne bledy sa wyrzucane w drugim zdarzeniu.
 
   Autor: Jacek Leszczynski
   E-Mail: tao@bialan.pl
@@ -13,7 +13,7 @@ unit XmlParser;
   Instrukcja obslugi:
   1. Ustawiamy wlasciwosci FILENAME, ma wskazywac na plik XML do wczytania.
   2. Wypelniamy zdarzenie ONREAD odpowiednia wartoscia.
-  3. Wypelniamy zdarzenie ONERROR odpowiednia wartoscia… (zalecane).
+  3. Wypelniamy zdarzenie ONERROR odpowiednia wartoscia (zalecane).
   4. Uruchamiamy funckje EXECUTE, ktora zwroci TRUE jesli sie wykona, gdy wyjda
      jakies bledy, zostanie zwrocona wartosc FALSE!
 }
@@ -116,9 +116,9 @@ implementation
 
 uses
   {$IFDEF LAZARUS}
-  lconvencoding;
+  lconvencoding, Komunikaty_Lazarus;
   {$ELSE}
-  windows;
+  windows, Komunikaty_Lazarus;
   {$ENDIF}
 
 type
@@ -375,7 +375,7 @@ begin
   if (plik='') or (not FileExists(plik)) then
   begin
     __ERROR:=2;
-    if Assigned(FOnError) then FOnError(Self, 2, 'Brak pliku *.XML! Parsowanie przerwane.');
+    if Assigned(FOnError) then FOnError(Self, 2, com_1);
     result:=false;
     exit;
   end;
@@ -451,7 +451,7 @@ begin
       begin
         (* rejestruje blad i przerywam zadanie *)
         __ERROR:=4;
-        if Assigned(FOnError) then FOnError(Self, 4, 'To nie jest plik XML! Parsowanie przerwane.');
+        if Assigned(FOnError) then FOnError(Self, 4, com_2);
         result:=false;
         exit;
       end;
@@ -494,12 +494,7 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
-    if Assigned(FOnError) then
-      {$IFDEF LAZARUS}
-      FOnError(Self, 2, 'Wysti nieprzewidziany przez autora bd!'+#13+'Parsowane pliku moe by niepene.');
-      {$ELSE}
-      FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Parsowane pliku mo¿e byæ niepe³ne.');
-      {$ENDIF}
+    if Assigned(FOnError) then FOnError(Self, 2, com_3);
     zm_result:=false;
   end;
   if Assigned(FOnAfterRead) then FOnAfterRead(Self);
@@ -511,9 +506,9 @@ var
   pom: string;
 begin
   pom:=s;
-  pom:=StringReplace(pom,'<','â—„',[rfReplaceAll]);
-  pom:=StringReplace(pom,'>','â–º',[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,' ','â™ª',[rfReplaceAll]);
+  pom:=StringReplace(pom,'<','Ã¢Â—Â„',[rfReplaceAll]);
+  pom:=StringReplace(pom,'>','Ã¢Â–Âº',[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,' ','Ã¢Â™Âª',[rfReplaceAll]);
   result:=pom;
 end;
 
@@ -522,9 +517,9 @@ var
   pom: string;
 begin
   pom:=s;
-  pom:=StringReplace(pom,'â—„','<',[rfReplaceAll]);
-  pom:=StringReplace(pom,'â–º','>',[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,'â™ª',' ',[rfReplaceAll]);
+  pom:=StringReplace(pom,'Ã¢Â—Â„','<',[rfReplaceAll]);
+  pom:=StringReplace(pom,'Ã¢Â–Âº','>',[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,'Ã¢Â™Âª',' ',[rfReplaceAll]);
   result:=pom;
 end;
 
@@ -539,7 +534,7 @@ begin
   if (plik='') or (not FileExists(plik)) then
   begin
     __ERROR:=3;
-    if Assigned(FOnError) then FOnError(Self, 2, 'Brak pliku *.XML! Kodowanie przerwane.');
+    if Assigned(FOnError) then FOnError(Self, 2, com_1);
     result:=false;
     exit;
   end;
@@ -597,11 +592,7 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
-    {$IFDEF LAZARUS}
-    if Assigned(FOnError) then FOnError(Self, 2, 'Wystpi nieprzewidziany przez autora bd!'+#13+'Przekodowany plik moe by nieczytelny.');
-    {$ELSE}
-    if Assigned(FOnError) then FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Przekodowany plik mo¿e byæ nieczytelny.');
-    {$ENDIF}
+    if Assigned(FOnError) then FOnError(Self, 2, com_3);
     zm_result:=false;
   end;
   result:=zm_result;
@@ -623,7 +614,7 @@ begin
   if (plik='') or (not FileExists(plik)) then
   begin
     __ERROR:=3;
-    if Assigned(FOnError) then FOnError(Self, 2, 'Brak zaszyfrowanego pliku XML! Dekodowanie przerwane.');
+    if Assigned(FOnError) then FOnError(Self, 2, com_4);
     result:=false;
     exit;
   end;
@@ -643,11 +634,7 @@ begin
   end;
   if __ERROR=0 then zm_result:=true else
   begin
-    {$IFDEF LAZARUS}
-    if Assigned(FOnError) then FOnError(Self, 2, 'Wystpi nieprzewidziany przez autora bd!'+#13+'Przekodowany plik moe by nieczytelny.');
-    {$ELSE}
-    if Assigned(FOnError) then FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Przekodowany plik mo¿e byæ nieczytelny.');
-    {$ENDIF}
+    if Assigned(FOnError) then FOnError(Self, 2, com_3);
     zm_result:=false;
   end;
   result:=zm_result;

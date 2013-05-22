@@ -2,22 +2,22 @@
   This source is only used to compile and install the package.
  }
 
-unit Parsery_components; 
+unit Parsery_components;
 
 interface
 
 uses
-  XmlParser, CsvParser, SymfoniaParser, LazarusPackageIntf;
+  XmlParser, CsvParser, SymfoniaParser, komunikaty_lazarus, LazarusPackageIntf;
 
 implementation
 
-procedure Register; 
+procedure Register;
 begin
-  RegisterUnit('XmlParser', @XmlParser.Register); 
-  RegisterUnit('CsvParser', @CsvParser.Register); 
-  RegisterUnit('SymfoniaParser', @SymfoniaParser.Register); 
-end; 
+  RegisterUnit('XmlParser', @XmlParser.Register);
+  RegisterUnit('CsvParser', @CsvParser.Register);
+  RegisterUnit('SymfoniaParser', @SymfoniaParser.Register);
+end;
 
 initialization
-  RegisterPackage('Parsery_components', @Register); 
+  RegisterPackage('Parsery_components', @Register);
 end.

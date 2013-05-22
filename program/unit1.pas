@@ -16,8 +16,10 @@ type
   TForm1 = class(TForm)
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
+    ComboBox1: TComboBox;
     csv: TCsvParser;
     Edit1: TEdit;
+    Label3: TLabel;
     message: TExtMessage;
     not_filter: TCheckBox;
     FileNameEdit1: TFileNameEdit;
@@ -177,12 +179,31 @@ begin
     if UpCase(ext)='.XML' then
     begin
       xml.Filename:=plik;
-      xml.Execute;
+      case ComboBox1.ItemIndex of
+        0: xml.Encoding:=eAuto;
+        1: xml.Encoding:=eUTF8;
+        2: xml.Encoding:=eWindows1250;
+        3: xml.Encoding:=eISO_8859_2;
+        4: xml.Encoding:=eDES;
+      end;
+      try
+        xml.Execute;
+      except
+        message.ShowError('Błąd odczytu, prawdopodobnie jest źle oznakowana strona kodowa pliku XML.');
+        FileNameEdit1.Enabled:=true;
+        exit;
+      end;
       if MSSQL1=10 then
       begin
         sg.Clean([gzNormal]);
         sg.RowCount:=1;
-        xml.Execute;
+        try
+          xml.Execute;
+        except
+          message.ShowError('Błąd odczytu, prawdopodobnie jest źle oznakowana strona kodowa pliku XML.');
+          FileNameEdit1.Enabled:=true;
+          exit;
+        end;
       end;
       not_filter.Enabled:=MSSQL1=10;
     end;

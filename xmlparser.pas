@@ -57,7 +57,7 @@ type
   TOnProgress = procedure(Sender: TObject; vMax, vPos: integer) of object;
 
   { typy wyliczeniowe }
-  TEncodingFormat = (eAuto,eUTF8,eWindows1250,eDES);
+  TEncodingFormat = (eAuto,eUTF8,eWindows1250,eISO_8859_2,eDES);
 
   { TXmlParser }
 
@@ -258,7 +258,7 @@ begin
   //jesli to jest plik zakodowany to wychodze
   if not b then
   begin
-    result:=3;
+    result:=10;
     exit;
   end;
   (* Chyba mamy do czynienia z plikiem XML, sprawdzam kodowanie *)
@@ -273,6 +273,7 @@ begin
   s:=GetLineToStr(s,2,'"');
   if (s='utf8') or (s='utf-8') then a:=1 else
   if pos('1250',s)>0 then a:=2 else
+  if pos('8859-2',s)>0 then a:=3 else
   a:=0;
   result:=a;
 end;
@@ -387,7 +388,7 @@ begin
     strumien.Clear;
     strumien.LoadFromFile(plik);
     //przekodowanie - jesli trzeba
-    if (FES=eWindows1250) or ((FES=eAuto) and (kodowanie=2)) then
+    if (FES=eWindows1250) or (FES=eISO_8859_2) or ((FES=eAuto) and (kodowanie>1)) then
     begin
       strumien2.Clear;
       a:=0;
@@ -396,7 +397,10 @@ begin
         buf:=strumien.Read(bufor[1],200);
         SetLength(bufor,buf);
         {$IFDEF LAZARUS}
-        bufor:=ConvertEncoding(bufor,'cp1250','utf8');
+        if (FES=eWindows1250) or (kodowanie=2) then
+          bufor:=ConvertEncoding(bufor,'cp1250','utf8') else
+        if (FES=eISO_8859_2) or (kodowanie=3) then
+          bufor:=ConvertEncoding(bufor,'iso_8859_2','utf8');
         {$ELSE}
         bufor:=UTF8Encode(bufor);
         {$ENDIF}
@@ -419,10 +423,11 @@ begin
         strumien2.Write(bufor[1],buf);
       end;
       strumien2.Position:=0;
+      //strumien2.SaveToFile('/home/tao/AAA.XML');
       b_przekodowanie:=true;
     end;
     //DESToXML - jesli trzeba
-    if (FES=eDES) or ((FES=eAuto) and (kodowanie=3)) then
+    if (FES=eDES) or ((FES=eAuto) and (kodowanie=10)) then
     begin
       strumien2.Clear;
       DecryptStream(strumien,strumien2,strumien.Size);
@@ -491,7 +496,7 @@ begin
   begin
     if Assigned(FOnError) then
       {$IFDEF LAZARUS}
-      FOnError(Self, 2, 'WystÄ…piÅ‚ nieprzewidziany przez autora bÅ‚Ä…d!'+#13+'Parsowane pliku moÅ¼e byÄ‡ niepeÅ‚ne.');
+      FOnError(Self, 2, 'Wysti nieprzewidziany przez autora bd!'+#13+'Parsowane pliku moe by niepene.');
       {$ELSE}
       FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Parsowane pliku mo¿e byæ niepe³ne.');
       {$ENDIF}
@@ -593,7 +598,7 @@ begin
   if __ERROR=0 then zm_result:=true else
   begin
     {$IFDEF LAZARUS}
-    if Assigned(FOnError) then FOnError(Self, 2, 'WystÄ…piÅ‚ nieprzewidziany przez autora bÅ‚Ä…d!'+#13+'Przekodowany plik moÅ¼e byÄ‡ nieczytelny.');
+    if Assigned(FOnError) then FOnError(Self, 2, 'Wystpi nieprzewidziany przez autora bd!'+#13+'Przekodowany plik moe by nieczytelny.');
     {$ELSE}
     if Assigned(FOnError) then FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Przekodowany plik mo¿e byæ nieczytelny.');
     {$ENDIF}
@@ -639,7 +644,7 @@ begin
   if __ERROR=0 then zm_result:=true else
   begin
     {$IFDEF LAZARUS}
-    if Assigned(FOnError) then FOnError(Self, 2, 'WystÄ…piÅ‚ nieprzewidziany przez autora bÅ‚Ä…d!'+#13+'Przekodowany plik moÅ¼e byÄ‡ nieczytelny.');
+    if Assigned(FOnError) then FOnError(Self, 2, 'Wystpi nieprzewidziany przez autora bd!'+#13+'Przekodowany plik moe by nieczytelny.');
     {$ELSE}
     if Assigned(FOnError) then FOnError(Self, 2, 'Wyst¹pi³‚ nieprzewidziany przez autora b³¹d!'+#13+'Przekodowany plik mo¿e byæ nieczytelny.');
     {$ENDIF}
@@ -653,4 +658,4 @@ begin
   result:=DecodeXML(ConvZapis(zm_filename));
 end;
 
-end.
+end.

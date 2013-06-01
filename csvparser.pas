@@ -77,7 +77,7 @@ implementation
 
 uses
   {$IFDEF LAZARUS}
-  lconvencoding, Komunikaty_Lazarus;
+  lconvencoding, parsery_utf8;
   {$ELSE}
   Komunikaty_Delphi;
   {$ENDIF}

@@ -37,8 +37,8 @@ Białystok 2011 © Elmark Marek Łotko
         <UnitName Value="SymfoniaParser"/>
       </Item3>
       <Item4>
-        <Filename Value="komunikaty_lazarus.pas"/>
-        <UnitName Value="komunikaty_lazarus"/>
+        <Filename Value="parsery_utf8.pas"/>
+        <UnitName Value="parsery_utf8"/>
       </Item4>
     </Files>
     <Type Value="RunAndDesignTime"/>

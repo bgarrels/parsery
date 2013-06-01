@@ -1,4 +1,4 @@
-unit komunikaty_lazarus;
+unit parsery_utf8;
 
 {$IFDEF LAZARUS}
 {$mode objfpc}{$H+}

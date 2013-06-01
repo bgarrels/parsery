@@ -7,7 +7,7 @@ unit Parsery_components;
 interface
 
 uses
-  XmlParser, CsvParser, SymfoniaParser, komunikaty_lazarus, LazarusPackageIntf;
+  XmlParser, CsvParser, SymfoniaParser, parsery_utf8, LazarusPackageIntf;
 
 implementation
 

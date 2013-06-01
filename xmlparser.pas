@@ -116,9 +116,9 @@ implementation
 
 uses
   {$IFDEF LAZARUS}
-  lconvencoding, Komunikaty_Lazarus;
+  lconvencoding, parsery_utf8;
   {$ELSE}
-  windows, Komunikaty_Lazarus;
+  windows, Komunikaty_Delphi;
   {$ENDIF}
 
 type

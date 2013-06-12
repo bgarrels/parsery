@@ -80,6 +80,7 @@ type
     FOnError: TErrorEvent;
     Des: TDCP_des;
     function OkreslStroneKodowa(filename:string):integer;
+    function OkreslStroneKodowa(plik_strumien:TStream):integer;
     function EncryptStream(s_in,s_out:TStream;size:longword):longword;
     function DecryptStream(s_in,s_out:TStream;size:longword):longword;
   protected
@@ -90,6 +91,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function Execute: boolean;
+    function Execute(plik_strumien:TStream): boolean;
     function LockString(s:string;spaces:boolean=false):string;
     function UnlockString(s:string;spaces:boolean=false):string;
     function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
@@ -267,6 +269,38 @@ begin
   reset(f);
   readln(f,s);
   closefile(f);
+  //sprawdzam kodowanie
+  a:=pos('encoding=',lowercase(s));
+  delete(s,1,a);
+  s:=GetLineToStr(s,2,'"');
+  if (s='utf8') or (s='utf-8') then a:=1 else
+  if pos('1250',s)>0 then a:=2 else
+  if pos('8859-2',s)>0 then a:=3 else
+  a:=0;
+  result:=a;
+end;
+
+function TXmlParser.OkreslStroneKodowa(plik_strumien: TStream): integer;
+var
+  s: string;
+  a,buf: integer;
+  b: boolean;
+begin
+  //czytam pierwsze 5 znakow
+  s:='12345';
+  buf:=strumien.Read(s[1],5);
+  //sprawdze jeszcze tylko, czy to jest XML
+  b:=CzyToJestXML(s);
+  //jesli to jest plik zakodowany to wychodze
+  if not b then
+  begin
+    result:=10;
+    exit;
+  end;
+  (* Chyba mamy do czynienia z plikiem XML, sprawdzam kodowanie *)
+  //przeczytanie pierwszego wiersza
+  plik_strumien.Position:=0;
+  s:=plik_strumien.ReadAnsiString;
   //sprawdzam kodowanie
   a:=pos('encoding=',lowercase(s));
   delete(s,1,a);
@@ -501,6 +535,136 @@ begin
   result:=zm_result;
 end;
 
+function TXmlParser.Execute(plik_strumien: TStream): boolean;
+var
+  bufor: shortstring;
+  kodowanie,a,b,buf: integer;
+  b_przekodowanie,zm_result: boolean;
+begin
+  if Assigned(FOnBeforeRead) then FOnBeforeRead(Self);
+  b_przekodowanie:=false;
+  zm_stop:=false;
+  try
+    __ERROR:=0;
+    import.adres:='';
+    import.level:=-1;
+    strumien.Clear;
+    strumien.LoadFromStream(plik_strumien);
+    if FES=eAuto then kodowanie:=OkreslStroneKodowa(strumien) else kodowanie:=0;
+    //przekodowanie - jesli trzeba
+    if (FES=eWindows1250) or (FES=eISO_8859_2) or ((FES=eAuto) and (kodowanie>1)) then
+    begin
+      strumien2.Clear;
+      a:=0;
+      while true do
+      begin
+        buf:=strumien.Read(bufor[1],200);
+        SetLength(bufor,buf);
+        {$IFDEF LAZARUS}
+        if (FES=eWindows1250) or (kodowanie=2) then
+          bufor:=ConvertEncoding(bufor,'cp1250','utf8') else
+        if (FES=eISO_8859_2) or (kodowanie=3) then
+          bufor:=ConvertEncoding(bufor,'iso_8859_2','utf8');
+        {$ELSE}
+        bufor:=UTF8Encode(bufor);
+        {$ENDIF}
+        buf:=length(bufor);
+        if (a=0) and (pos('<?',bufor)>0) or (a=1) then
+        begin
+          if a=0 then strumien2.Write('<?xml version="1.0" encoding="utf-8"?>',38);
+          b:=pos('?>',bufor);
+          if b>0 then
+          begin
+            delete(bufor,1,b+1);
+            dec(buf,b+1);
+            a:=2;
+          end else begin
+            a:=1;
+            continue;
+          end;
+        end;
+        if buf=0 then break;
+        strumien2.Write(bufor[1],buf);
+      end;
+      strumien2.Position:=0;
+      //strumien2.SaveToFile('/home/tao/AAA.XML');
+      b_przekodowanie:=true;
+    end;
+    //DESToXML - jesli trzeba
+    if (FES=eDES) or ((FES=eAuto) and (kodowanie=10)) then
+    begin
+      strumien2.Clear;
+      DecryptStream(strumien,strumien2,strumien.Size);
+      strumien2.Position:=0;
+      b_przekodowanie:=true;
+    end;
+    //ewentualny test poprawnosci pliku XML
+    if FTest then
+    begin
+      if b_przekodowanie then
+      begin
+        buf:=strumien2.Read(bufor[1],5);
+        SetLength(bufor,buf);
+        strumien2.Position:=0;
+      end else begin
+        buf:=strumien.Read(bufor[1],5);
+        SetLength(bufor,buf);
+        strumien.Position:=0;
+      end;
+      if not CzyToJestXML(bufor) then
+      begin
+        (* rejestruje blad i przerywam zadanie *)
+        __ERROR:=4;
+        if Assigned(FOnError) then FOnError(Self, 4, com_2);
+        result:=false;
+        exit;
+      end;
+    end;
+    //parser
+    {$IFDEF LAZARUS}
+    doc:=TXMLDocument.Create;
+    {$ELSE}
+    doc:=TXMLDocument.Create(nil);
+    {$ENDIF}
+    if b_przekodowanie then
+    begin
+      istrumien:=2;
+      if Assigned(FOnProgress) then FOnProgress(Self,strumien2.Size,0);
+      {$IFDEF LAZARUS}
+      ReadXMLFile(doc,strumien2); (* strumien przekodowany, lub zdeszyfrowany *)
+      {$ELSE}
+      doc.LoadFromStream(strumien2,xetUTF_8); (* strumien przekodowany, lub zdeszyfrowany *)
+      {$ENDIF}
+    end else begin
+      istrumien:=0;
+      if Assigned(FOnProgress) then FOnProgress(Self,strumien.Size,0);
+      {$IFDEF LAZARUS}
+      ReadXMLFile(doc,strumien); (* strumien domyslny *)
+      {$ELSE}
+      doc.LoadFromStream(strumien,xetUTF_8); (* strumien domyslny *)
+      {$ENDIF}
+    end;
+    {$IFDEF LAZARUS}
+    temp:=doc.DocumentElement;
+    {$ELSE}
+    temp:=doc.DOMDocument;
+    {$ENDIF}
+    ParseXML(0,temp);
+    if (not zm_stop) and FNULL and Assigned(FOnRead) then FOnRead(self,-1,'','','','',zm_stop);
+  finally
+    doc.Free;
+    strumien.Clear;
+    if FES<>eUTF8 then strumien2.Clear;
+  end;
+  if __ERROR=0 then zm_result:=true else
+  begin
+    if Assigned(FOnError) then FOnError(Self, 2, com_3);
+    zm_result:=false;
+  end;
+  if Assigned(FOnAfterRead) then FOnAfterRead(Self);
+  result:=zm_result;
+end;
+
 function TXmlParser.LockString(s: string; spaces: boolean): string;
 var
   pom: string;
@@ -607,7 +771,7 @@ function TXmlParser.DecodeXML(DecodeFile: string; XMLFile: string): boolean;
 var
   plik: string;
   bufor: shortstring;
-  kodowanie,a,b,buf: integer;
+  kodowanie,buf: integer;
   zm_result: boolean;
 begin
   plik:=DecodeFile;

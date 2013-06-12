@@ -30,6 +30,7 @@ type
     sparser: TSymfoniaParser;
     StatusBar1: TStatusBar;
     xml: TXmlParser;
+    XmlParser1: TXmlParser;
     XMLPropStorage1: TXMLPropStorage;
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);

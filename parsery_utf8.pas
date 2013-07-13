@@ -14,6 +14,9 @@ const
   com_2 = 'To nie jest plik XML! Parsowanie przerwane.';
   com_3 = 'Wystąpił nieprzewidziany przez autora błąd!'+#13+'Parsowane pliku może być niepewne.';
   com_4 = 'Brak zaszyfrowanego pliku XML! Dekodowanie przerwane.';
+  com_5 = '◄';
+  com_6 = '►';
+  com_7 = '♫';
 
 implementation
 

@@ -17,9 +17,11 @@ type
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
     csv: TCsvParser;
     Edit1: TEdit;
     Label3: TLabel;
+    Label4: TLabel;
     message: TExtMessage;
     not_filter: TCheckBox;
     FileNameEdit1: TFileNameEdit;
@@ -177,7 +179,7 @@ begin
     ext:=ExtractFileExt(plik);
     sg.Clean([gzNormal]);
     sg.RowCount:=1;
-    if UpCase(ext)='.XML' then
+    if (UpCase(ext)='.XML') or (UpCase(ext)='.ZIP') then
     begin
       xml.Filename:=plik;
       case ComboBox1.ItemIndex of
@@ -185,7 +187,11 @@ begin
         1: xml.Encoding:=eUTF8;
         2: xml.Encoding:=eWindows1250;
         3: xml.Encoding:=eISO_8859_2;
-        4: xml.Encoding:=eDES;
+      end;
+      case ComboBox2.ItemIndex of
+        0: xml.Contener:=crNone;
+        1: xml.Contener:=crZIP;
+        2: xml.Contener:=crDES;
       end;
       try
         xml.Execute;

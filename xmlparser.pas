@@ -43,7 +43,7 @@ uses
   {$ENDIF}
   Forms, Controls, Graphics, Dialogs,
   {$IFDEF LAZARUS}
-  DOM, XMLRead,
+  DOM, XMLRead,  Zipper,
   {$ELSE}
   XmlDOM, XmlIntf, XmlDoc,
   {$ENDIF}
@@ -57,15 +57,17 @@ type
   TOnProgress = procedure(Sender: TObject; vMax, vPos: integer) of object;
 
   { typy wyliczeniowe }
-  TEncodingFormat = (eAuto,eUTF8,eWindows1250,eISO_8859_2,eDES);
+  TContener = (crNone,crDES,crZIP);
+  TEncodingFormat = (eAuto,eUTF8,eWindows1250,eISO_8859_2);
 
   { TXmlParser }
 
   TXmlParser = class(TComponent)
   private
+    FContener: TContener;
     FOnProgress: TOnProgress;
     { Private declarations }
-    strumien,strumien2,strumien3: TMemoryStream;
+    strumien,strumien2: TMemoryStream;
     doc: TXMLDocument;
     temp: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF} ;
     __ERROR: integer;
@@ -79,10 +81,13 @@ type
     FOnAfterRead: TBeforeAfterReadEvent;
     FOnError: TErrorEvent;
     Des: TDCP_des;
-    function OkreslStroneKodowa(filename:string):integer;
-    function OkreslStroneKodowa(plik_strumien:TStream):integer;
+    function OkreslStroneKodowa(str:TStream):integer;
     function EncryptStream(s_in,s_out:TStream;size:longword):longword;
     function DecryptStream(s_in,s_out:TStream;size:longword):longword;
+    {$IFDEF LAZARUS}
+    procedure proc1(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
+    procedure proc2(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
+    {$ENDIF}
   protected
     { Protected declarations }
     procedure ParseXML(level: integer; node: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF});
@@ -91,7 +96,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function Execute: boolean;
-    function Execute(plik_strumien:TStream): boolean;
     function LockString(s:string;spaces:boolean=false):string;
     function UnlockString(s:string;spaces:boolean=false):string;
     function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
@@ -100,6 +104,7 @@ type
     function DecodeXML:boolean; {$IFDEF DELPHI}overload;{$ENDIF}
   published
     { Published declarations }
+    property Contener: TContener read FContener write FContener default crNone;
     property Encoding: TEncodingFormat read FES write FES default eAuto;
     property Filename: string read zm_filename write zm_filename;
     property LastNullRead: boolean read FNULL write FNULL default false;
@@ -120,7 +125,7 @@ uses
   {$IFDEF LAZARUS}
   lconvencoding, parsery_utf8;
   {$ELSE}
-  windows, Komunikaty_Delphi;
+  windows, Komunikaty_Delphi, ZipMstr;
   {$ENDIF}
 
 type
@@ -231,7 +236,7 @@ begin
           ((s[5]='L') or (s[5]='l'));
 end;
 
-function TXmlParser.OkreslStroneKodowa(filename: string): integer;
+function TXmlParser.OkreslStroneKodowa(str: TStream): integer;
 var
   e: file of char;
   f: textfile;
@@ -241,66 +246,20 @@ var
   b: boolean;
 begin
   (* Najpierw sprawdze, czy plik nie jest zakodowany *)
-  assignfile(e,filename);
-  {$IFDEF LAZARUS}
-  reset(e,1);
-  {$ELSE}
-  reset(e);
-  {$ENDIF}
-  //czytam pierwsze 5 znakow
-  s:='';
-  for a:=1 to 5 do
-  begin
-    read(e,c);
-    s:=s+c;
-  end;
-  closefile(e);
+  str.Position:=0;
+  SetLength(s,255);
+  a:=str.Read(s[1],255);
+  SetLength(s,a);
+  str.Position:=0;
   //sprawdze jeszcze tylko, czy to jest XML
   b:=CzyToJestXML(s);
-  //jesli to jest plik zakodowany to wychodze
+  //jesli to nie jest xml - wychodze
   if not b then
   begin
     result:=10;
     exit;
   end;
   (* Chyba mamy do czynienia z plikiem XML, sprawdzam kodowanie *)
-  //przeczytanie pierwszego wiersza
-  assignfile(f,filename);
-  reset(f);
-  readln(f,s);
-  closefile(f);
-  //sprawdzam kodowanie
-  a:=pos('encoding=',lowercase(s));
-  delete(s,1,a);
-  s:=GetLineToStr(s,2,'"');
-  if (s='utf8') or (s='utf-8') then a:=1 else
-  if pos('1250',s)>0 then a:=2 else
-  if pos('8859-2',s)>0 then a:=3 else
-  a:=0;
-  result:=a;
-end;
-
-function TXmlParser.OkreslStroneKodowa(plik_strumien: TStream): integer;
-var
-  s: string;
-  a,buf: integer;
-  b: boolean;
-begin
-  //czytam pierwsze 5 znakow
-  s:='12345';
-  buf:=strumien.Read(s[1],5);
-  //sprawdze jeszcze tylko, czy to jest XML
-  b:=CzyToJestXML(s);
-  //jesli to jest plik zakodowany to wychodze
-  if not b then
-  begin
-    result:=10;
-    exit;
-  end;
-  (* Chyba mamy do czynienia z plikiem XML, sprawdzam kodowanie *)
-  //przeczytanie pierwszego wiersza
-  plik_strumien.Position:=0;
-  s:=plik_strumien.ReadAnsiString;
   //sprawdzam kodowanie
   a:=pos('encoding=',lowercase(s));
   delete(s,1,a);
@@ -333,6 +292,8 @@ procedure TXmlParser.ParseXML(level: integer; node: {$IFDEF LAZARUS} TDOMNode {$
 var
   cNode: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF};
   i: integer;
+  s: string;
+  b: boolean;
 begin
   if zm_stop or (Node=nil) then Exit;
   AktualizujAdres(Node.NodeName,level);
@@ -340,24 +301,31 @@ begin
   if Assigned(FOnRead) then
   begin
     //ATRYBUTY
-    try
-    if {$IFDEF LAZARUS} Node.HasAttributes and {$ENDIF} (Node.Attributes.Length>0) then
+    try if {$IFDEF LAZARUS} Node.HasAttributes and {$ENDIF} (Node.Attributes.Length>0) then b:=true else b:=false; except b:=false; end;
+    if b then
     begin
+      s:=import.adres;
+      delete(s,1,10);
       for i:=0 to Node.Attributes.Length-1 do
+      begin
         {$IFDEF LAZARUS}
         FOnRead(self,level,import.adres,Node.NodeName,Node.Attributes[i].NodeName,UTF8Encode(Node.Attributes[i].NodeValue),zm_stop);
         {$ELSE}
-        FOnRead(self,level,import.adres,Node.NodeName,Node.Attributes[i].NodeName,Node.Attributes[i].NodeValue,zm_stop);
+        FOnRead(self,level,s,Node.NodeName,Node.Attributes[i].NodeName,Node.Attributes[i].NodeValue,zm_stop);
         {$ENDIF}
+      end;
     end;
-    except end;
     //WARTOSCI KLUCZY
     if Node.NodeValue<>'' then
+    begin
+      s:=import.adres;
+      delete(s,1,10);
       {$IFDEF LAZARUS}
       FOnRead(self,import.level,import.adres,import.klucz,'',UTF8Encode(Node.NodeValue),zm_stop);
       {$ELSE}
-      FOnRead(self,import.level,import.adres,import.klucz,'',Node.NodeValue,zm_stop);
+      FOnRead(self,import.level,s,import.klucz,'',Node.NodeValue,zm_stop);
       {$ENDIF}
+    end;
   end;
 
   if Assigned(FOnProgress) then case istrumien of
@@ -378,12 +346,12 @@ end;
 constructor TXmlParser.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FContener:=crNone;
   FES:=eAuto;
   FNULL:=false;
   FTest:=true;
   strumien:=TMemoryStream.Create;
   strumien2:=TMemoryStream.Create;
-  strumien3:=TMemoryStream.Create;
   Des:=TDCP_des.Create(Self);
 end;
 
@@ -391,10 +359,27 @@ destructor TXmlParser.Destroy;
 begin
   strumien.Free;
   strumien2.Free;
-  strumien3.Free;
   DES.Free;
   inherited Destroy;
 end;
+
+{$IFDEF LAZARUS}
+
+procedure TXmlParser.proc1(Sender: TObject; var AStream: TStream;
+  AItem: TFullZipFileEntry);
+begin
+  AStream:=TMemoryStream.Create;
+end;
+
+procedure TXmlParser.proc2(Sender: TObject; var AStream: TStream;
+  AItem: TFullZipFileEntry);
+begin
+  AStream.Position:=0;
+  strumien.LoadFromStream(Astream);
+  Astream.Free;
+end;
+
+{$ENDIF}
 
 function TXmlParser.Execute: boolean;
 var
@@ -402,9 +387,21 @@ var
   bufor: shortstring;
   kodowanie,a,b,buf: integer;
   b_przekodowanie,zm_result: boolean;
+  {$IFDEF LAZARUS}
+  ZipMaster: TUnzipper;
+  s11,s22: TStream;
+  lista: TStrings;
+  pom: string;
+  {$ELSE}
+  ZipMaster: TZipMaster;
+  {$ENDIF}
 begin
   if Assigned(FOnBeforeRead) then FOnBeforeRead(Self);
+  {$IFDEF LAZARUS}
   plik:=ConvZapis(zm_filename);
+  {$ELSE}
+  plik:=zm_filename;
+  {$ENDIF}
   b_przekodowanie:=false;
   if (plik='') or (not FileExists(plik)) then
   begin
@@ -414,17 +411,60 @@ begin
     exit;
   end;
   zm_stop:=false;
-  if FES=eAuto then kodowanie:=OkreslStroneKodowa(plik) else kodowanie:=0;
+  strumien.Clear;
+  strumien2.Clear;
+  (* wczytanie strumienia z automatycznym odkodowaniem/rozpakowaniem jesli trzeba *)
+  case FContener of
+    crNone: strumien.LoadFromFile(plik);
+    crDES:  begin
+              strumien2.LoadFromFile(plik);
+              DecryptStream(strumien2,strumien,strumien2.Size);
+              strumien2.Clear;
+            end;
+    crZIP:  begin
+              {$IFDEF LAZARUS}
+              ZipMaster:=TUnzipper.Create;
+              s11:=TMemoryStream.Create;
+              s22:=TMemoryStream.Create;
+              lista:=TStringList.Create;
+              pom:=ChangeFileExt(ExtractFileName(plik),'.xml');
+              lista.Add(pom);
+              try
+                ZipMaster.FileName:=plik;
+                ZipMaster.OnCreateStream:=@proc1;
+                ZipMaster.OnDoneStream:=@proc2;
+                ZipMaster.UnZipFiles(lista);
+              finally
+                ZipMaster.Free;
+                s11.Free;
+                s22.Free;
+                lista.Free;
+              end;
+              {$ELSE}
+              if FContener=crZIP then
+              begin
+                ZipMaster:=TZipMaster.Create(nil);
+                try
+                  ZipMaster.ZipFileName:=plik;
+                  strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0]^.Filename));
+                finally
+                  ZipMaster.Free;
+                end;
+              end else strumien.LoadFromFile(plik);
+              {$ENDIF}
+            end;
+  end;
+  strumien.Position:=0;
+  (* w razie potrzeby przekodowujemy do utf8 *)
+  if FES=eAuto then kodowanie:=OkreslStroneKodowa(strumien) else kodowanie:=0;
+  strumien.Position:=0;
   try
     __ERROR:=0;
     import.adres:='';
     import.level:=-1;
-    strumien.Clear;
-    strumien.LoadFromFile(plik);
     //przekodowanie - jesli trzeba
     if (FES=eWindows1250) or (FES=eISO_8859_2) or ((FES=eAuto) and (kodowanie>1)) then
     begin
-      strumien2.Clear;
       a:=0;
       while true do
       begin
@@ -457,26 +497,20 @@ begin
         strumien2.Write(bufor[1],buf);
       end;
       strumien2.Position:=0;
-      //strumien2.SaveToFile('/home/tao/AAA.XML');
       b_przekodowanie:=true;
-    end;
-    //DESToXML - jesli trzeba
-    if (FES=eDES) or ((FES=eAuto) and (kodowanie=10)) then
-    begin
-      strumien2.Clear;
-      DecryptStream(strumien,strumien2,strumien.Size);
-      strumien2.Position:=0;
-      b_przekodowanie:=true;
+      strumien.Clear;
     end;
     //ewentualny test poprawnosci pliku XML
     if FTest then
     begin
       if b_przekodowanie then
       begin
+        strumien2.Position:=0;
         buf:=strumien2.Read(bufor[1],5);
         SetLength(bufor,buf);
         strumien2.Position:=0;
       end else begin
+        strumien.Position:=0;
         buf:=strumien.Read(bufor[1],5);
         SetLength(bufor,buf);
         strumien.Position:=0;
@@ -485,6 +519,7 @@ begin
       begin
         (* rejestruje blad i przerywam zadanie *)
         __ERROR:=4;
+        if b_przekodowanie then strumien2.Clear else strumien.Clear;
         if Assigned(FOnError) then FOnError(Self, 4, com_2);
         result:=false;
         exit;
@@ -523,138 +558,7 @@ begin
     if (not zm_stop) and FNULL and Assigned(FOnRead) then FOnRead(self,-1,'','','','',zm_stop);
   finally
     doc.Free;
-    strumien.Clear;
-    if FES<>eUTF8 then strumien2.Clear;
-  end;
-  if __ERROR=0 then zm_result:=true else
-  begin
-    if Assigned(FOnError) then FOnError(Self, 2, com_3);
-    zm_result:=false;
-  end;
-  if Assigned(FOnAfterRead) then FOnAfterRead(Self);
-  result:=zm_result;
-end;
-
-function TXmlParser.Execute(plik_strumien: TStream): boolean;
-var
-  bufor: shortstring;
-  kodowanie,a,b,buf: integer;
-  b_przekodowanie,zm_result: boolean;
-begin
-  if Assigned(FOnBeforeRead) then FOnBeforeRead(Self);
-  b_przekodowanie:=false;
-  zm_stop:=false;
-  try
-    __ERROR:=0;
-    import.adres:='';
-    import.level:=-1;
-    strumien.Clear;
-    strumien.LoadFromStream(plik_strumien);
-    if FES=eAuto then kodowanie:=OkreslStroneKodowa(strumien) else kodowanie:=0;
-    //przekodowanie - jesli trzeba
-    if (FES=eWindows1250) or (FES=eISO_8859_2) or ((FES=eAuto) and (kodowanie>1)) then
-    begin
-      strumien2.Clear;
-      a:=0;
-      while true do
-      begin
-        buf:=strumien.Read(bufor[1],200);
-        SetLength(bufor,buf);
-        {$IFDEF LAZARUS}
-        if (FES=eWindows1250) or (kodowanie=2) then
-          bufor:=ConvertEncoding(bufor,'cp1250','utf8') else
-        if (FES=eISO_8859_2) or (kodowanie=3) then
-          bufor:=ConvertEncoding(bufor,'iso_8859_2','utf8');
-        {$ELSE}
-        bufor:=UTF8Encode(bufor);
-        {$ENDIF}
-        buf:=length(bufor);
-        if (a=0) and (pos('<?',bufor)>0) or (a=1) then
-        begin
-          if a=0 then strumien2.Write('<?xml version="1.0" encoding="utf-8"?>',38);
-          b:=pos('?>',bufor);
-          if b>0 then
-          begin
-            delete(bufor,1,b+1);
-            dec(buf,b+1);
-            a:=2;
-          end else begin
-            a:=1;
-            continue;
-          end;
-        end;
-        if buf=0 then break;
-        strumien2.Write(bufor[1],buf);
-      end;
-      strumien2.Position:=0;
-      //strumien2.SaveToFile('/home/tao/AAA.XML');
-      b_przekodowanie:=true;
-    end;
-    //DESToXML - jesli trzeba
-    if (FES=eDES) or ((FES=eAuto) and (kodowanie=10)) then
-    begin
-      strumien2.Clear;
-      DecryptStream(strumien,strumien2,strumien.Size);
-      strumien2.Position:=0;
-      b_przekodowanie:=true;
-    end;
-    //ewentualny test poprawnosci pliku XML
-    if FTest then
-    begin
-      if b_przekodowanie then
-      begin
-        buf:=strumien2.Read(bufor[1],5);
-        SetLength(bufor,buf);
-        strumien2.Position:=0;
-      end else begin
-        buf:=strumien.Read(bufor[1],5);
-        SetLength(bufor,buf);
-        strumien.Position:=0;
-      end;
-      if not CzyToJestXML(bufor) then
-      begin
-        (* rejestruje blad i przerywam zadanie *)
-        __ERROR:=4;
-        if Assigned(FOnError) then FOnError(Self, 4, com_2);
-        result:=false;
-        exit;
-      end;
-    end;
-    //parser
-    {$IFDEF LAZARUS}
-    doc:=TXMLDocument.Create;
-    {$ELSE}
-    doc:=TXMLDocument.Create(nil);
-    {$ENDIF}
-    if b_przekodowanie then
-    begin
-      istrumien:=2;
-      if Assigned(FOnProgress) then FOnProgress(Self,strumien2.Size,0);
-      {$IFDEF LAZARUS}
-      ReadXMLFile(doc,strumien2); (* strumien przekodowany, lub zdeszyfrowany *)
-      {$ELSE}
-      doc.LoadFromStream(strumien2,xetUTF_8); (* strumien przekodowany, lub zdeszyfrowany *)
-      {$ENDIF}
-    end else begin
-      istrumien:=0;
-      if Assigned(FOnProgress) then FOnProgress(Self,strumien.Size,0);
-      {$IFDEF LAZARUS}
-      ReadXMLFile(doc,strumien); (* strumien domyslny *)
-      {$ELSE}
-      doc.LoadFromStream(strumien,xetUTF_8); (* strumien domyslny *)
-      {$ENDIF}
-    end;
-    {$IFDEF LAZARUS}
-    temp:=doc.DocumentElement;
-    {$ELSE}
-    temp:=doc.DOMDocument;
-    {$ENDIF}
-    ParseXML(0,temp);
-    if (not zm_stop) and FNULL and Assigned(FOnRead) then FOnRead(self,-1,'','','','',zm_stop);
-  finally
-    doc.Free;
-    strumien.Clear;
-    if FES<>eUTF8 then strumien2.Clear;
+    if b_przekodowanie then strumien2.Clear else strumien.Clear;
   end;
   if __ERROR=0 then zm_result:=true else
   begin
@@ -670,9 +574,9 @@ var
   pom: string;
 begin
   pom:=s;
-  pom:=StringReplace(pom,'<','â',[rfReplaceAll]);
-  pom:=StringReplace(pom,'>','âº',[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,' ','âª',[rfReplaceAll]);
+  pom:=StringReplace(pom,'<',#9668,[rfReplaceAll]);
+  pom:=StringReplace(pom,'>',#9658,[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,' ',#9834,[rfReplaceAll]);
   result:=pom;
 end;
 
@@ -681,9 +585,15 @@ var
   pom: string;
 begin
   pom:=s;
-  pom:=StringReplace(pom,'â','<',[rfReplaceAll]);
-  pom:=StringReplace(pom,'âº','>',[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,'âª',' ',[rfReplaceAll]);
+  {$IFDEF LAZARUS}
+  (* w celu zachowania wersji wstecz *)
+  pom:=StringReplace(pom,com_5,'<',[rfReplaceAll]);
+  pom:=StringReplace(pom,com_6,'>',[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,com_7,' ',[rfReplaceAll]);
+  {$ENDIF}
+  pom:=StringReplace(pom,#9668,'<',[rfReplaceAll]);
+  pom:=StringReplace(pom,#9658,'>',[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,#9834,' ',[rfReplaceAll]);
   result:=pom;
 end;
 
@@ -702,57 +612,18 @@ begin
     result:=false;
     exit;
   end;
-  if (FES=eAuto) or (FES=eDES) then kodowanie:=OkreslStroneKodowa(plik) else kodowanie:=0;
   try
     __ERROR:=0;
     strumien.Clear;
     strumien.LoadFromFile(plik);
-    //przekodowanie jesli trzeba
-    if (FES=eWindows1250) or (((FES=eAuto) or (FES=eDES)) and (kodowanie=2)) then
-    begin
-      strumien2.Clear;
-      a:=0;
-      while true do
-      begin
-        buf:=strumien.Read(bufor[1],200);
-        SetLength(bufor,buf);
-        {$IFDEF LAZARUS}
-        bufor:=ConvertEncoding(bufor,'cp1250','utf8');
-        {$ELSE}
-        bufor:=UTF8Encode(bufor);
-        {$ENDIF}
-        buf:=length(bufor);
-        if (a=0) and (pos('<?',bufor)>0) or (a=1) then
-        begin
-          if a=0 then strumien2.Write('<?xml version="1.0" encoding="utf-8"?>',38);
-          b:=pos('?>',bufor);
-          if b>0 then
-          begin
-            delete(bufor,1,b+1);
-            dec(buf,b+1);
-            a:=2;
-          end else begin
-            a:=1;
-            continue;
-          end;
-        end;
-        if buf=0 then break;
-        strumien2.Write(bufor[1],buf);
-      end;
-      strumien2.Position:=0;
-    end;
     //XMLToDES
-    strumien3.Clear;
-    if (FES=eWindows1250) or (((FES=eAuto) or (FES=eDES)) and (kodowanie=2)) then
-      EncryptStream(strumien2,strumien3,strumien2.Size)
-    else
-      EncryptStream(strumien,strumien3,strumien.Size);
+    strumien2.Clear;
+    EncryptStream(strumien,strumien2,strumien.Size);
     if EncodeFile<>'' then plik:=EncodeFile;
-    strumien3.SaveToFile(plik);
+    strumien2.SaveToFile(plik);
   finally
     strumien.Clear;
-    if FES<>eUTF8 then strumien2.Clear;
-    strumien3.Clear;
+    strumien2.Clear;
   end;
   if __ERROR=0 then zm_result:=true else
   begin
@@ -764,14 +635,18 @@ end;
 
 function TXmlParser.EncodeXML: boolean;
 begin
+  {$IFDEF LAZARUS}
   result:=EncodeXML(ConvZapis(zm_filename));
+  {$ELSE}
+  result:=EncodeXML(zm_filename);
+  {$ENDIF}
 end;
 
 function TXmlParser.DecodeXML(DecodeFile: string; XMLFile: string): boolean;
 var
   plik: string;
   bufor: shortstring;
-  kodowanie,buf: integer;
+  kodowanie,a,b,buf: integer;
   zm_result: boolean;
 begin
   plik:=DecodeFile;
@@ -806,7 +681,11 @@ end;
 
 function TXmlParser.DecodeXML: boolean;
 begin
+  {$IFDEF LAZARUS}
   result:=DecodeXML(ConvZapis(zm_filename));
+  {$ELSE}
+  result:=DecodeXML(zm_filename);
+  {$ENDIF}
 end;
 
 end.

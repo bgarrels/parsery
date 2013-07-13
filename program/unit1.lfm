@@ -9,7 +9,7 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   Position = poDesktopCenter
-  SessionProperties = 'FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width;ComboBox1.ItemIndex'
+  SessionProperties = 'ComboBox1.ItemIndex;FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width;ComboBox2.ItemIndex'
   LCLVersion = '1.0.8.0'
   object FileNameEdit1: TFileNameEdit
     Left = 8
@@ -176,32 +176,57 @@ object Form1: TForm1
     Panels = <>
   end
   object ComboBox1: TComboBox
-    Left = 8
-    Height = 25
+    Left = 240
+    Height = 23
     Top = 16
     Width = 218
     ItemHeight = 0
-    ItemIndex = 0
     Items.Strings = (
       'Automatyczne'
       'UTF-8'
       'Windows-1250'
       'ISO-8859-2'
-      'Szyfrowany DES (UTF-8)'
     )
-    TabOrder = 8
-    Text = 'Automatyczne'
+    Style = csDropDownList
+    TabOrder = 9
   end
   object Label3: TLabel
     AnchorSideLeft.Control = ComboBox1
     AnchorSideBottom.Control = ComboBox1
-    Left = 8
+    Left = 240
     Height = 14
     Top = 2
     Width = 130
     Anchors = [akLeft, akBottom]
     Caption = 'Kodowanie (tylko XML):'
     ParentColor = False
+  end
+  object Label4: TLabel
+    AnchorSideLeft.Control = ComboBox2
+    AnchorSideBottom.Control = ComboBox2
+    Left = 8
+    Height = 14
+    Top = 2
+    Width = 86
+    Anchors = [akLeft, akBottom]
+    Caption = 'Kontener pliku:'
+    ParentColor = False
+  end
+  object ComboBox2: TComboBox
+    Left = 8
+    Height = 23
+    Top = 16
+    Width = 218
+    ItemHeight = 0
+    ItemIndex = 0
+    Items.Strings = (
+      'XML'
+      'ZIP'
+      'DES'
+    )
+    Style = csDropDownList
+    TabOrder = 8
+    Text = 'XML'
   end
   object xml: TXmlParser
     OnRead = xmlRead

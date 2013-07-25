@@ -43,6 +43,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure sparserRead(Sender: TObject; poziom: integer; adres, klucz,
       zmienna, wartosc: string; var Stopped: boolean);
+    procedure xmlBranchRead(Sender: TObject; poziom: integer; adres: string;
+      var Stopped: boolean);
     procedure xmlProgress(Sender: TObject; vMax, vPos: integer);
     procedure xmlRead(Sender: TObject; poziom: integer; adres, klucz, zmienna,
       wartosc: string; var Stopped: boolean);
@@ -254,6 +256,12 @@ begin
   if s='' then s:=' ';
   CZYTAJ:=false;
   list.Add(IntToStr(poziom)+#13#10+adres+#13#10+klucz+#13#10+s+#13#10+wartosc);
+end;
+
+procedure TForm1.xmlBranchRead(Sender: TObject; poziom: integer; adres: string;
+  var Stopped: boolean);
+begin
+  list.Add(IntToStr(poziom)+#13#10+adres+#13#10+'<B>'+#13#10+' '+#13#10+' ');
 end;
 
 procedure TForm1.xmlProgress(Sender: TObject; vMax, vPos: integer);

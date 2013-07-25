@@ -10,7 +10,7 @@ object Form1: TForm1
   OnDestroy = FormDestroy
   Position = poDesktopCenter
   SessionProperties = 'ComboBox1.ItemIndex;FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width;ComboBox2.ItemIndex'
-  LCLVersion = '1.0.8.0'
+  LCLVersion = '1.0.10.0'
   object FileNameEdit1: TFileNameEdit
     Left = 8
     Height = 21
@@ -177,7 +177,7 @@ object Form1: TForm1
   end
   object ComboBox1: TComboBox
     Left = 240
-    Height = 23
+    Height = 25
     Top = 16
     Width = 218
     ItemHeight = 0
@@ -231,6 +231,7 @@ object Form1: TForm1
   object xml: TXmlParser
     OnRead = xmlRead
     OnProgress = xmlProgress
+    OnBranchRead = xmlBranchRead
     left = 32
     top = 384
   end

@@ -53,6 +53,7 @@ type
   { zdarzenia }
   TBeforeAfterReadEvent = procedure(Sender: TObject) of object;
   TReadEvent = procedure(Sender: TObject; poziom: integer; adres,klucz,zmienna,wartosc: string; var Stopped:boolean) of object;
+  TBranchEvent = procedure(Sender: TObject; poziom: integer; adres: string; var Stopped:boolean) of object;
   TErrorEvent = procedure(Sender: TObject; ERR: integer; ERROR: string) of object;
   TOnProgress = procedure(Sender: TObject; vMax, vPos: integer) of object;
 
@@ -78,6 +79,7 @@ type
     FTest: boolean;
     FOnBeforeRead: TBeforeAfterReadEvent;
     FOnRead: TReadEvent;
+    FOnBranch: TBranchEvent;
     FOnAfterRead: TBeforeAfterReadEvent;
     FOnError: TErrorEvent;
     Des: TDCP_des;
@@ -115,6 +117,7 @@ type
     property OnAfterRead: TBeforeAfterReadEvent read FOnAfterRead write FOnAfterRead;
     property OnError: TErrorEvent read FOnError write FOnError;
     property OnProgress: TOnProgress read FOnProgress write FOnProgress;
+    property OnBranchRead: TBranchEvent read FOnBranch write FOnBranch;
   end;
 
 procedure Register;
@@ -340,6 +343,11 @@ begin
     ParseXML(level,cNode);
     cNode:=cNode.NextSibling;
     dec(level);
+  end;
+  if (import.level>level) and Assigned(FOnBranch) then
+  begin
+    AktualizujAdres(Node.NodeName,level);
+    FOnBranch(self,import.level,import.adres,zm_stop);
   end;
 end;
 

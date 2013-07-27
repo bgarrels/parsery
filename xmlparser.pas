@@ -79,7 +79,9 @@ type
     FTest: boolean;
     FOnBeforeRead: TBeforeAfterReadEvent;
     FOnRead: TReadEvent;
-    FOnBranch: TBranchEvent;
+    FOnBranchIn: TBranchEvent;
+    FOnBranchBlock: TBranchEvent;
+    FOnBranchOut: TBranchEvent;
     FOnAfterRead: TBeforeAfterReadEvent;
     FOnError: TErrorEvent;
     Des: TDCP_des;
@@ -117,7 +119,9 @@ type
     property OnAfterRead: TBeforeAfterReadEvent read FOnAfterRead write FOnAfterRead;
     property OnError: TErrorEvent read FOnError write FOnError;
     property OnProgress: TOnProgress read FOnProgress write FOnProgress;
-    property OnBranchRead: TBranchEvent read FOnBranch write FOnBranch;
+    property OnBranchIn: TBranchEvent read FOnBranchIn write FOnBranchIn;
+    property OnBranchBlock: TBranchEvent read FOnBranchBlock write FOnBranchBlock;
+    property OnBranchOut: TBranchEvent read FOnBranchOut write FOnBranchOut;
   end;
 
 procedure Register;
@@ -299,7 +303,18 @@ var
   b: boolean;
 begin
   if zm_stop or (Node=nil) then Exit;
-  AktualizujAdres(Node.NodeName,level);
+
+  if (level>import.level) and (import.level>=0) and Assigned(FOnBranchIn) then
+  begin
+    s:=import.adres;
+    delete(s,1,10);
+    {$IFDEF LAZARUS}
+    FOnBranchIn(self,import.level,import.adres,zm_stop);
+    {$ELSE}
+    FOnBranchIn(self,import.level,s,zm_stop);
+    {$ENDIF}
+    AktualizujAdres(Node.NodeName,level);
+  end else AktualizujAdres(Node.NodeName,level);
 
   if Assigned(FOnRead) then
   begin
@@ -344,10 +359,28 @@ begin
     cNode:=cNode.NextSibling;
     dec(level);
   end;
-  if (import.level>level) and Assigned(FOnBranch) then
+
+  if (import.level=level) and Assigned(FOnBranchBlock) then
   begin
+    s:=import.adres;
+    delete(s,1,10);
+    {$IFDEF LAZARUS}
+    FOnBranchBlock(self,import.level,import.adres,zm_stop);
+    {$ELSE}
+    FOnBranchBlock(self,import.level,s,zm_stop);
+    {$ENDIF}
+  end;
+
+  if (level<import.level) and Assigned(FOnBranchOut) then
+  begin
+    s:=import.adres;
+    delete(s,1,10);
+    {$IFDEF LAZARUS}
+    FOnBranchOut(self,import.level,import.adres,zm_stop);
+    {$ELSE}
+    FOnBranchOut(self,import.level,s,zm_stop);
+    {$ENDIF}
     AktualizujAdres(Node.NodeName,level);
-    FOnBranch(self,import.level,import.adres,zm_stop);
   end;
 end;
 

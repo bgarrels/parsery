@@ -231,7 +231,9 @@ object Form1: TForm1
   object xml: TXmlParser
     OnRead = xmlRead
     OnProgress = xmlProgress
-    OnBranchRead = xmlBranchRead
+    OnBranchIn = xmlBranchIn
+    OnBranchBlock = xmlBranchBlock
+    OnBranchOut = xmlBranchOut
     left = 32
     top = 384
   end

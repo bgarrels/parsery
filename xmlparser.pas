@@ -43,7 +43,7 @@ uses
   {$ENDIF}
   Forms, Controls, Graphics, Dialogs,
   {$IFDEF LAZARUS}
-  DOM, XMLRead,  Zipper,
+  DOM, XMLRead, Zipper,
   {$ELSE}
   XmlDOM, XmlIntf, XmlDoc,
   {$ENDIF}
@@ -68,7 +68,7 @@ type
     FContener: TContener;
     FOnProgress: TOnProgress;
     { Private declarations }
-    strumien,strumien2: TMemoryStream;
+    strumien,strumien2,strumien_source: TMemoryStream;
     doc: TXMLDocument;
     temp: {$IFDEF LAZARUS} TDOMNode {$ELSE} IDOMNode {$ENDIF} ;
     __ERROR: integer;
@@ -89,6 +89,7 @@ type
     function EncryptStream(s_in,s_out:TStream;size:longword):longword;
     function DecryptStream(s_in,s_out:TStream;size:longword):longword;
     {$IFDEF LAZARUS}
+    procedure proc_open(Sender: TObject; var AStream: TStream);
     procedure proc1(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
     procedure proc2(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
     {$ENDIF}
@@ -100,6 +101,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function Execute: boolean;
+    function Execute(Stream:TStream): boolean;
     function LockString(s:string;spaces:boolean=false):string;
     function UnlockString(s:string;spaces:boolean=false):string;
     function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
@@ -404,7 +406,42 @@ begin
   inherited Destroy;
 end;
 
+function TXmlParser.Execute: boolean;
+var
+  plik: string;
+  stream: TMemoryStream;
+  b: boolean;
+begin
+  {$IFDEF LAZARUS}
+  plik:=ConvZapis(zm_filename);
+  {$ELSE}
+  plik:=zm_filename;
+  {$ENDIF}
+  if (plik='') or (not FileExists(plik)) then
+  begin
+    __ERROR:=2;
+    if Assigned(FOnError) then FOnError(Self, 2, com_1);
+    result:=false;
+    exit;
+  end;
+  stream:=TMemoryStream.Create;
+  stream.LoadFromFile(plik);
+  try
+    b:=Execute(stream);
+  finally
+    stream.Free;
+  end;
+  result:=b;
+end;
+
 {$IFDEF LAZARUS}
+
+procedure TXmlParser.proc_open(Sender: TObject; var AStream: TStream);
+begin
+  AStream:=TMemoryStream.Create;
+  AStream.CopyFrom(strumien_source,strumien_source.Size);
+  AStream.Position:=0;
+end;
 
 procedure TXmlParser.proc1(Sender: TObject; var AStream: TStream;
   AItem: TFullZipFileEntry);
@@ -422,7 +459,7 @@ end;
 
 {$ENDIF}
 
-function TXmlParser.Execute: boolean;
+function TXmlParser.Execute(Stream: TStream): boolean;
 var
   plik: string;
   bufor: shortstring;
@@ -430,68 +467,59 @@ var
   b_przekodowanie,zm_result: boolean;
   {$IFDEF LAZARUS}
   ZipMaster: TUnzipper;
-  s11,s22: TStream;
+  instream,outstream: TMemoryStream;
   lista: TStrings;
   pom: string;
   {$ELSE}
   ZipMaster: TZipMaster;
   {$ENDIF}
 begin
-  if Assigned(FOnBeforeRead) then FOnBeforeRead(Self);
   {$IFDEF LAZARUS}
   plik:=ConvZapis(zm_filename);
   {$ELSE}
   plik:=zm_filename;
   {$ENDIF}
+  if Assigned(FOnBeforeRead) then FOnBeforeRead(Self);
   b_przekodowanie:=false;
-  if (plik='') or (not FileExists(plik)) then
-  begin
-    __ERROR:=2;
-    if Assigned(FOnError) then FOnError(Self, 2, com_1);
-    result:=false;
-    exit;
-  end;
   zm_stop:=false;
   strumien.Clear;
   strumien2.Clear;
   (* wczytanie strumienia z automatycznym odkodowaniem/rozpakowaniem jesli trzeba *)
   case FContener of
-    crNone: strumien.LoadFromFile(plik);
+    crNone: strumien.LoadFromStream(stream);
     crDES:  begin
-              strumien2.LoadFromFile(plik);
+              strumien2.LoadFromStream(stream);
               DecryptStream(strumien2,strumien,strumien2.Size);
               strumien2.Clear;
             end;
     crZIP:  begin
               {$IFDEF LAZARUS}
+              strumien_source:=TMemoryStream.Create;
+              strumien_source.LoadFromStream(stream);
               ZipMaster:=TUnzipper.Create;
-              s11:=TMemoryStream.Create;
-              s22:=TMemoryStream.Create;
               lista:=TStringList.Create;
               pom:=ChangeFileExt(ExtractFileName(plik),'.xml');
-              lista.Add(pom);
               try
-                ZipMaster.FileName:=plik;
+                ZipMaster.OnOpenInputStream:=@proc_open;
                 ZipMaster.OnCreateStream:=@proc1;
                 ZipMaster.OnDoneStream:=@proc2;
+                ZipMaster.Examine;
+                lista.Add(ZipMaster.Entries.FullEntries[0].ArchiveFileName);
+                strumien_source.Position:=0;
                 ZipMaster.UnZipFiles(lista);
               finally
-                ZipMaster.Free;
-                s11.Free;
-                s22.Free;
                 lista.Free;
+                ZipMaster.Free;
+                strumien_source.Free;
               end;
               {$ELSE}
-              if FContener=crZIP then
-              begin
-                ZipMaster:=TZipMaster.Create(nil);
-                try
-                  ZipMaster.ZipFileName:=plik;
-                  strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0]^.Filename));
-                finally
-                  ZipMaster.Free;
-                end;
-              end else strumien.LoadFromFile(plik);
+              ZipMaster:=TZipMaster.Create(nil);
+              try
+                ZipMaster.ZipFileName:=plik;
+                strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0]^.Filename));
+              finally
+                ZipMaster.Free;
+              end;
               {$ENDIF}
             end;
   end;

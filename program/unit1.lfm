@@ -270,8 +270,4 @@ object Form1: TForm1
     left = 104
     top = 240
   end
-  object XmlParser1: TXmlParser
-    left = 431
-    top = 496
-  end
 end

@@ -101,8 +101,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetAlg01;
-    function Execute: boolean;
-    function Execute(Stream:TStream): boolean;
+    function Execute: boolean; overload;
+    function Execute(Stream:TStream): boolean; overload;
     function LockString(s:string;spaces:boolean=false):string;
     function UnlockString(s:string;spaces:boolean=false):string;
     function EncodeXML(XMLFile:string;EncodeFile:string=''):boolean; {$IFDEF DELPHI}overload;{$ENDIF}
@@ -523,8 +523,9 @@ begin
               {$ELSE}
               ZipMaster:=TZipMaster.Create(nil);
               try
-                ZipMaster.ZipFileName:=plik;
-                strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0]^.Filename));
+                ZipMaster.ZipStream.LoadFromStream(stream);
+                //ZipMaster.ZipFileName:=plik;
+                strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0].Filename));
               finally
                 ZipMaster.Free;
               end;

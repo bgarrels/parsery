@@ -1,6 +1,8 @@
 unit komunikaty_delphi;
 
+{$IFDEF FPC}
 {$mode objfpc}{$H+}
+{$ENDIF}
 
 interface
 

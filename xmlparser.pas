@@ -100,6 +100,7 @@ type
     { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure SetAlg01;
     function Execute: boolean;
     function Execute(Stream:TStream): boolean;
     function LockString(s:string;spaces:boolean=false):string;
@@ -148,6 +149,7 @@ var
   import: _import;
   zm_stop: boolean;
   istrumien: integer;
+  stary_algorytm: boolean = false;
 
 procedure Register;
 begin
@@ -308,6 +310,7 @@ begin
 
   if (level>import.level) and (import.level>=0) and Assigned(FOnBranchIn) then
   begin
+    if stary_algorytm then AktualizujAdres(Node.NodeName,level);
     s:=import.adres;
     delete(s,1,10);
     {$IFDEF LAZARUS}
@@ -315,7 +318,7 @@ begin
     {$ELSE}
     FOnBranchIn(self,import.level,s,zm_stop);
     {$ENDIF}
-    AktualizujAdres(Node.NodeName,level);
+    if not stary_algorytm then AktualizujAdres(Node.NodeName,level);
   end else AktualizujAdres(Node.NodeName,level);
 
   if Assigned(FOnRead) then
@@ -404,6 +407,11 @@ begin
   strumien2.Free;
   DES.Free;
   inherited Destroy;
+end;
+
+procedure TXmlParser.SetAlg01;
+begin
+  stary_algorytm:=true;
 end;
 
 function TXmlParser.Execute: boolean;

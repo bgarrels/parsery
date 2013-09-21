@@ -477,7 +477,6 @@ var
   ZipMaster: TUnzipper;
   instream,outstream: TMemoryStream;
   lista: TStrings;
-  pom: string;
   {$ELSE}
   ZipMaster: TZipMaster;
   {$ENDIF}
@@ -506,7 +505,6 @@ begin
               strumien_source.LoadFromStream(stream);
               ZipMaster:=TUnzipper.Create;
               lista:=TStringList.Create;
-              pom:=ChangeFileExt(ExtractFileName(plik),'.xml');
               try
                 ZipMaster.OnOpenInputStream:=@proc_open;
                 ZipMaster.OnCreateStream:=@proc1;
@@ -524,7 +522,6 @@ begin
               ZipMaster:=TZipMaster.Create(nil);
               try
                 ZipMaster.ZipStream.LoadFromStream(stream);
-                //ZipMaster.ZipFileName:=plik;
                 strumien.LoadFromStream(ZipMaster.ExtractFileToStream(ZipMaster.DirEntry[0].Filename));
               finally
                 ZipMaster.Free;

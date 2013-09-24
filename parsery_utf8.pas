@@ -16,7 +16,8 @@ const
   com_4 = 'Brak zaszyfrowanego pliku XML! Dekodowanie przerwane.';
   com_5 = '◄';
   com_6 = '►';
-  com_7 = '♫';
+  com_7 = '♪';
+  com_8 = '♫';
 
 implementation
 

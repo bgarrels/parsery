@@ -275,7 +275,7 @@ begin
   a:=pos('encoding=',lowercase(s));
   delete(s,1,a);
   s:=GetLineToStr(s,2,'"');
-  if (s='utf8') or (s='utf-8') then a:=1 else
+  if (UpCase(s)='UTF8') or (UpCase(s)='UTF-8') then a:=1 else
   if pos('1250',s)>0 then a:=2 else
   if pos('8859-2',s)>0 then a:=3 else
   a:=0;

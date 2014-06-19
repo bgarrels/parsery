@@ -10,10 +10,10 @@ object Form1: TForm1
   OnDestroy = FormDestroy
   Position = poDesktopCenter
   SessionProperties = 'ComboBox1.ItemIndex;FileNameEdit1.InitialDir;Height;Left;sg.Columns;Top;Width;ComboBox2.ItemIndex'
-  LCLVersion = '1.0.10.0'
+  LCLVersion = '1.0.14.0'
   object FileNameEdit1: TFileNameEdit
     Left = 8
-    Height = 21
+    Height = 22
     Top = 64
     Width = 593
     DialogOptions = []
@@ -30,9 +30,9 @@ object Form1: TForm1
     AnchorSideLeft.Control = FileNameEdit1
     AnchorSideBottom.Control = FileNameEdit1
     Left = 8
-    Height = 14
-    Top = 48
-    Width = 153
+    Height = 15
+    Top = 47
+    Width = 164
     Anchors = [akLeft, akBottom]
     BorderSpacing.Bottom = 2
     Caption = 'Plik XML/CSV do wczytania:'
@@ -81,9 +81,9 @@ object Form1: TForm1
     AnchorSideTop.Control = sg
     AnchorSideBottom.Control = sg
     Left = 8
-    Height = 14
-    Top = 98
-    Width = 36
+    Height = 15
+    Top = 97
+    Width = 40
     Anchors = [akLeft, akBottom]
     Caption = 'Wynik:'
     ParentColor = False
@@ -108,10 +108,10 @@ object Form1: TForm1
     AnchorSideRight.Control = FileNameEdit1
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = FileNameEdit1
-    Left = 420
+    Left = 406
     Height = 21
     Top = 43
-    Width = 181
+    Width = 195
     Anchors = [akRight, akBottom]
     Caption = 'Nie filtruj MSSQL TraceData!'
     Enabled = False
@@ -148,7 +148,7 @@ object Form1: TForm1
     AnchorSideRight.Side = asrBottom
     Left = 8
     Height = 10
-    Top = 85
+    Top = 86
     Width = 593
     Anchors = [akTop, akLeft, akRight]
     Smooth = True
@@ -170,14 +170,14 @@ object Form1: TForm1
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Height = 17
-    Top = 510
+    Height = 18
+    Top = 509
     Width = 635
     Panels = <>
   end
   object ComboBox1: TComboBox
     Left = 240
-    Height = 25
+    Height = 26
     Top = 16
     Width = 218
     ItemHeight = 0
@@ -194,9 +194,9 @@ object Form1: TForm1
     AnchorSideLeft.Control = ComboBox1
     AnchorSideBottom.Control = ComboBox1
     Left = 240
-    Height = 14
-    Top = 2
-    Width = 130
+    Height = 15
+    Top = 1
+    Width = 141
     Anchors = [akLeft, akBottom]
     Caption = 'Kodowanie (tylko XML):'
     ParentColor = False
@@ -205,9 +205,9 @@ object Form1: TForm1
     AnchorSideLeft.Control = ComboBox2
     AnchorSideBottom.Control = ComboBox2
     Left = 8
-    Height = 14
-    Top = 2
-    Width = 86
+    Height = 15
+    Top = 1
+    Width = 94
     Anchors = [akLeft, akBottom]
     Caption = 'Kontener pliku:'
     ParentColor = False

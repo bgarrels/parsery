@@ -101,6 +101,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure SetAlg01;
+    procedure SetAlg02;
     function Execute: boolean; overload;
     function Execute(Stream:TStream): boolean; overload;
     function LockString(s:string;spaces:boolean=false):string;
@@ -353,7 +354,7 @@ begin
 
   if Assigned(FOnProgress) then case istrumien of
     0: FOnProgress(self,strumien.Size,strumien.Position);
-    2: FOnProgress(self,strumien.Size,strumien2.Position);
+    2: FOnProgress(self,strumien2.Size,strumien2.Position);
   end;
 
   cNode:=Node.FirstChild;
@@ -412,6 +413,11 @@ end;
 procedure TXmlParser.SetAlg01;
 begin
   stary_algorytm:=true;
+end;
+
+procedure TXmlParser.SetAlg02;
+begin
+  stary_algorytm:=false;
 end;
 
 function TXmlParser.Execute: boolean;

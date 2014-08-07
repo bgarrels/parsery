@@ -16,6 +16,8 @@ type
   TForm1 = class(TForm)
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
+    CheckBox1: TCheckBox;
+    CheckBox2: TCheckBox;
     ComboBox1: TComboBox;
     ComboBox2: TComboBox;
     csv: TCsvParser;
@@ -30,6 +32,7 @@ type
     cc: TProgressBar;
     sg: TStringGrid;
     sparser: TSymfoniaParser;
+    SpeedButton1: TSpeedButton;
     StatusBar1: TStatusBar;
     xml: TXmlParser;
     XMLPropStorage1: TXMLPropStorage;
@@ -55,6 +58,7 @@ type
     MSSQL1,MSSQL2: integer;
     CZYTAJ: boolean;
     list: TStringList;
+    global_licznik: integer;
     { private declarations }
   public
     { public declarations }
@@ -172,6 +176,7 @@ var
   plik,ext: string;
   i,j: integer;
 begin
+  global_licznik:=0;
   FileNameEdit1.InitialDir:=ExtractFilePath(FileNameEdit1.FileName);
   FileNameEdit1.Enabled:=false;
   StatusBar1.SimpleText:='Reading XML 1/2...';
@@ -181,6 +186,7 @@ begin
   plik:=UTF8ToAnsi(FileNameEdit1.FileName);
   if FileExists(plik) then
   begin
+    if CheckBox1.Checked then xml.SetAlg01 else xml.SetAlg02;
     ext:=ExtractFileExt(plik);
     sg.Clean([gzNormal]);
     sg.RowCount:=1;
@@ -291,6 +297,8 @@ procedure TForm1.xmlRead(Sender: TObject; poziom: integer; adres, klucz,
 var
   s: string;
 begin
+  inc(global_licznik);
+  if CheckBox2.Checked and (global_licznik>2000) then Stopped:=true;
   s:=zmienna;
   if s='' then s:=' ';
   //test MSSQL

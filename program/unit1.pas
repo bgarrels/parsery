@@ -51,6 +51,7 @@ type
       var Stopped: boolean);
     procedure xmlBranchOut(Sender: TObject; poziom: integer; adres: string;
       var Stopped: boolean);
+    procedure xmlError(Sender: TObject; ERR: integer; ERROR: string);
     procedure xmlProgress(Sender: TObject; vMax, vPos: integer);
     procedure xmlRead(Sender: TObject; poziom: integer; adres, klucz, zmienna,
       wartosc: string; var Stopped: boolean);
@@ -183,7 +184,7 @@ begin
   Application.ProcessMessages;
   MSSQL1:=0;
   MSSQL2:=0;
-  plik:=UTF8ToAnsi(FileNameEdit1.FileName);
+  plik:=AnsiToUTF8(FileNameEdit1.FileName);
   if FileExists(plik) then
   begin
     if CheckBox1.Checked then xml.SetAlg01 else xml.SetAlg02;
@@ -283,6 +284,11 @@ procedure TForm1.xmlBranchOut(Sender: TObject; poziom: integer; adres: string;
   var Stopped: boolean);
 begin
   list.Add(IntToStr(poziom)+#13#10+adres+#13#10+'<OUT>'+#13#10+' '+#13#10+' ');
+end;
+
+procedure TForm1.xmlError(Sender: TObject; ERR: integer; ERROR: string);
+begin
+  ShowMessage(ERROR);
 end;
 
 procedure TForm1.xmlProgress(Sender: TObject; vMax, vPos: integer);

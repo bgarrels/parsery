@@ -265,6 +265,7 @@ object Form1: TForm1
   end
   object xml: TXmlParser
     OnRead = xmlRead
+    OnError = xmlError
     OnProgress = xmlProgress
     OnBranchIn = xmlBranchIn
     OnBranchBlock = xmlBranchBlock

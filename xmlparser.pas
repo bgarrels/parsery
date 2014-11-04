@@ -655,9 +655,9 @@ var
   pom: string;
 begin
   pom:=s;
-  pom:=StringReplace(pom,'<',#9668,[rfReplaceAll]);
-  pom:=StringReplace(pom,'>',#9658,[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,' ',#9834,[rfReplaceAll]);
+  pom:=StringReplace(pom,'<',com_5,[rfReplaceAll]);
+  pom:=StringReplace(pom,'>',com_6,[rfReplaceAll]);
+  if spaces then pom:=StringReplace(pom,' ',com_7,[rfReplaceAll]);
   result:=pom;
 end;
 
@@ -666,15 +666,13 @@ var
   pom: string;
 begin
   pom:=s;
-  {$IFDEF LAZARUS}
   (* w celu zachowania wersji wstecz *)
   pom:=StringReplace(pom,com_5,'<',[rfReplaceAll]);
   pom:=StringReplace(pom,com_6,'>',[rfReplaceAll]);
   if spaces then pom:=StringReplace(pom,com_7,' ',[rfReplaceAll]);
-  {$ENDIF}
-  pom:=StringReplace(pom,#9668,'<',[rfReplaceAll]);
-  pom:=StringReplace(pom,#9658,'>',[rfReplaceAll]);
-  if spaces then pom:=StringReplace(pom,#9834,' ',[rfReplaceAll]);
+  //pom:=StringReplace(pom,#9668,'<',[rfReplaceAll]);
+  //pom:=StringReplace(pom,#9658,'>',[rfReplaceAll]);
+  //if spaces then pom:=StringReplace(pom,#9834,' ',[rfReplaceAll]);
   result:=pom;
 end;
 
